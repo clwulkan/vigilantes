@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Vigilantes</title>
 <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@700;800&display=swap" rel="stylesheet">
@@ -54,6 +54,12 @@ canvas{width:100%;display:block;border:4px solid #111;box-shadow:7px 7px 0 #111;
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%A5%8A%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Vigilantes: jogo de luta com 26 heróis, modo história, horda e online.">
+<style id="vg-zoom-css">
+/* Trava de zoom: tocar rápido nos botões (soco, soco, soco) não pode dar zoom na página no iPad/iPhone */
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
+#game,#game *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#cv,.pad,.pad *{touch-action:none}
+</style>
 </head>
 <body>
 <main>
@@ -696,6 +702,24 @@ c.on('close',()=>{if(qOn){try{p.destroy()}catch(e){}setTimeout(qmStart,600+Math.
 p.on('error',e=>{if(!qOn)return;try{p.destroy()}catch(x){}setTimeout(e.type=='peer-unavailable'?qmStart:qmJoin,1500)})}
 $('#qm').onclick=()=>{if(!window.Peer){onMsg(NOONLINE);return}qOn=1;$('#onbox').hidden=true;onMsg('Procurando um adversário... Outro jogador precisa estar procurando partida agora. Toque em Voltar para cancelar.');qmStart()};
 {const b0=$('#back2').onclick;$('#back2').onclick=()=>{qmStop();b0()}}
+</script>
+<script id="vg-zoom">
+// ================= TRAVA DE ZOOM (iPad/iPhone) =================
+// O Safari dá zoom com dois toques rápidos ou com "pinça". Num jogo de luta isso tira os botões da tela.
+// Aqui: o segundo toque rápido não vira zoom, e a pinça é ignorada. Os botões do jogo continuam funcionando
+// (eles usam eventos de ponteiro, que não dependem disto). Campos de texto ficam de fora.
+(function () {
+  let ultimo = -1e9;
+  const campo = e => e.target && e.target.closest && e.target.closest('input,textarea');
+  document.addEventListener('touchend', e => {
+    const t = e.timeStamp;
+    if (t - ultimo < 350 && e.cancelable && !campo(e)) e.preventDefault();
+    ultimo = t;
+  }, { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(n => document.addEventListener(n, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('dblclick', e => { if (!campo(e)) e.preventDefault(); }, { passive: false });
+})();
 </script>
 </body>
 </html>
