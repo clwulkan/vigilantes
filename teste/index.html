@@ -71,6 +71,8 @@ body.luta main{max-width:none;padding:8px 12px 12px}
 #game:fullscreen{background:var(--bg);padding:8px 12px;overflow:auto}
 #game:-webkit-full-screen{background:var(--bg);padding:8px 12px;overflow:auto;width:100%;height:100%;box-sizing:border-box}
 #gire{display:none}
+#golpes{max-width:92%;color:#fff;font:800 13px/1.5 Nunito,system-ui,sans-serif;text-align:center;background:rgba(0,0,0,.45);padding:8px 12px;border:2px solid #fff}
+#golpes b{font:400 20px Bangers,Impact,sans-serif;letter-spacing:.03em;color:var(--pop)}
 @media (pointer:coarse){body.luta #help{display:none}}
 @media (pointer:coarse) and (max-height:500px){
  body.luta #pads{position:fixed;left:0;right:0;bottom:6px;pointer-events:none;z-index:5}
@@ -106,7 +108,7 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
 <section id="game" hidden>
 <div id="fin" hidden><b id="res"></b><button class="btn" id="rematch">Revanche</button><button class="btn" id="menu">Menu</button></div>
 <button class="btn" id="pz" style="min-height:38px;font-size:19px;margin:0 0 10px">⏸ Pausar</button> <button class="btn" id="tc" hidden style="min-height:38px;font-size:19px;margin:0 0 10px;background:#fff">⛶ Tela cheia</button>
-<div id="cvw" style="position:relative"><canvas id="cv" width="1000" height="400" aria-label="Arena de luta"></canvas><div id="pm" hidden><button class="btn" id="pmc">Continuar</button><button class="btn" id="pmq" style="background:#fff">Desistir da partida</button></div></div>
+<div id="cvw" style="position:relative"><canvas id="cv" width="1000" height="400" aria-label="Arena de luta"></canvas><div id="pm" hidden><button class="btn" id="pmc">Continuar</button><button class="btn" id="pmq" style="background:#fff">Desistir da partida</button><div id="golpes"><b>Golpes</b> (▶ = na direção do adversário · ◀ = para trás)<br>SOCO várias vezes: combo que termina no golpe do seu herói<br>CHUTE: chute · ▶ + CHUTE: giratório · ◀ + CHUTE: mortal · ▼ + CHUTE: rasteira<br>▼ + SOCO: gancho · ◀ + SOCO: soco giratório<br>No ar: CHUTE voadora · SOCO martelo · ▼ + CHUTE pisão · pular 2 vezes: pirueta<br>DEFENDER + lado: rolamento · ▼ + DEFENDER: defende a rasteira</div></div></div>
 <div id="pads"></div>
 <p id="help"></p>
 </section>
@@ -226,7 +228,7 @@ if(MN.some(m=>m.hp>0))return;
 if(hd.wv<3){hd.wv++;hd.q=3+hd.wv*2+hd.ph*2;hd.qt=10;msg='Fase '+hd.ph+' · Onda '+hd.wv;mt=70;return}
 const b=BOSSES[(hd.ph-1)%BOSSES.length];E=mk(b,W-200);E.t=1;E.pool=b.pool;E.bm=b.bm;E.bcd=b.bcd;E.lv=Math.min(1.1,DL[dif]+hd.ph*.05);E.max=E.hp=Math.round(b.hp*(.55+.15*hd.ph));msg='CHEFE: '+b.n.toUpperCase();mt=100}
 function inputFor(f){if(f===P)return net?nin(0):inp(0);if(net){if(net.co){const k=AL.indexOf(f)+1;if(k>0&&net.hu[k])return nin(k)}else if(f===E)return nin(1)}const o=near(f,foes(f));return ai(f,vis(o))}
-function mk(h,x){return{h,x,y:G,vx:0,vy:0,hp:h.hp,max:h.hp,face:1,at:0,hit:0,sc:0,cd:170,sa:0,stun:0,dash:0,dh:0,rs:0,beam:0,dv:0,dvt:0,sh:0,buff:0,wp:0,slow:0,sk:1,lh:-999,z:h.big||1,tr:[],ac2:h.c,lv:.3,szm:0,szt:0,conf:0,refl:0,tq:0,axe:0,jc:0,pu:0,bk:0,bs:100,cmb:0,abk:0,t:0,mt2:0,iv:0,psn:0,spn:0,qc:0,bm:0,bcd:0,stl:0,stolen:null,mute:0,bub:0,bl:0,fz:0,mv:null,mt:0,mhs:null,kd:0,gu:0,fl:0,cr:0,rl:0,rlc:0,lch:0,abd:0}}
+function mk(h,x){return{h,x,y:G,vx:0,vy:0,hp:h.hp,max:h.hp,face:1,at:0,hit:0,sc:0,cd:170,sa:0,stun:0,dash:0,dh:0,rs:0,beam:0,dv:0,dvt:0,sh:0,buff:0,wp:0,slow:0,sk:1,lh:-999,z:h.big||1,tr:[],ac2:h.c,lv:.3,szm:0,szt:0,conf:0,refl:0,tq:0,axe:0,jc:0,pu:0,bk:0,bs:100,cmb:0,abk:0,t:0,mt2:0,iv:0,psn:0,spn:0,qc:0,bm:0,bcd:0,stl:0,stolen:null,mute:0,bub:0,bl:0,fz:0,mv:null,mt:0,mhs:null,kd:0,gu:0,fl:0,cr:0,rl:0,rlc:0,lch:0,abd:0,ci:-1}}
 function hit(o,d,kb,h2){if(invencivel(o))return;if(cur&&cur.bm)d*=cur.bm;if(cur&&cur.szt>0&&cur.szm==1)d*=1.5;if(o.refl>0&&cur&&cur.t!==o.t){cur.hp-=d;cur.lh=tf;hs=Math.max(hs,4);X({type:'txt',x:cur.x,y:cur.y-120*cur.z,s:'-'+Math.round(d),c:'#7aa2ff',t:34,m:34,sz:22});X({type:'ring',x:o.x,y:o.y-60,c:'#7aa2ff',R:80,t:12,m:12});return}
 if(o.sh>0){o.hp-=d*.12;o.lh=tf;X({type:'ring',x:o.x,y:o.y-60,c:'#7fe0ff',R:70,t:10,m:10});return}
 if(o.bk&&o.bs>0&&podeDefender(o,curAlt)){o.hp-=d*.15;o.lh=tf;o.bs-=d*4;o.vx=kb*.5;hs=Math.max(hs,3);X({type:'ring',x:o.x+o.face*20,y:o.y-60,c:'#9fd3ff',R:60,t:10,m:10});if(o.bs<=0){o.stun=40;X({type:'txt',x:o.x,y:o.y-130*o.z,s:'GUARDA QUEBRADA!',c:'#ff9bf0',t:50,m:50})}return}
@@ -277,7 +279,8 @@ else if(s=='blind'){o.bl=200;X({type:'flash',c:'#000',t:16,m:16})}
 else if(s=='frenzy'){f.fz=240;f.buff=240;X({type:'flash',c:'#fff59d',t:10,m:10})}
 else if(s=='trap'){for(let k=0;k<2;k++)bl.push({x:Math.max(40,Math.min(W-40,f.x+fc*(70+k*110))),t:700,o:f,d:18,rad:55,mine:1})}
 else if(s=='cluster'){[5,6.5,8].forEach(v=>pr.push({x:f.x+fc*30,y:f.y-80,vx:fc*v,vy:-7,o:f,c:'#2b2b2b',r:12,bomb:1,dmg:0}))}}
-function step(f,o,i){cur=f;const h=f.h,g=f.y>=G,B=f.buff>0,zb=h.big||1,zt=f.szt>0?(f.szm==1?1.7:.6)*zb:zb;f.z+=(zt-f.z)*.12;if(f.szt>0)f.szt--;const big=f.z>zb*1.3,sml=f.z<zb*.8,sp=h.spd*(B?1.4:1)*(big?.75:sml?1.4:1)*(f.fz>0?1.7:1),dm=h.dmg*(B?1.3:1)*(big?1.6:1);f.face=o.x>f.x?1:-1;
+function step(f,o,i){cur=f;const h=f.h,g=f.y>=G,B=f.buff>0,zb=h.big||1,zt=f.szt>0?(f.szm==1?1.7:.6)*zb:zb;f.z+=(zt-f.z)*.12;if(f.szt>0)f.szt--;const big=f.z>zb*1.3,sml=f.z<zb*.8,sp=h.spd*(B?1.4:1)*(big?.75:sml?1.4:1)*(f.fz>0?1.7:1);f.face=o.x>f.x?1:-1;
+
 if(f.conf>0){f.conf--;const t=i.l;i=Object.assign({},i,{l:i.r,r:t})}
 if(!f.bk&&f.bs<100)f.bs=Math.min(100,f.bs+.35);f.bk=0;f.cr=0;if(f.gu>0)f.gu--;if(f.fl>0)f.fl--;if(f.rlc>0)f.rlc--;if(f.bl>0)f.bl--;if(f.fz>0)f.fz--;if(f.mute>0)f.mute--;if(f.stl>0){f.stl--;if(f.stl==0){f.stolen=null;f.sc=f.cd=300}}if(f.bub>0){f.bub--;f.stun=Math.max(f.stun,2);f.vy=Math.min(f.vy,-1.2);if(f.bub==1){f.hp-=12;f.lh=tf;X({type:'ring',x:f.x,y:f.y-60,c:'#80d8ff',R:100,t:16,m:16});X({type:'txt',x:f.x,y:f.y-120*f.z,s:'-12',c:'#80d8ff',t:30,m:30,sz:22})}}if(f.iv>0)f.iv--;if(f.qc>0)f.qc--;if(f.psn>0){f.psn--;if(f.psn%30==0&&f.hp>0){f.hp-=5;f.lh=tf;X({type:'txt',x:f.x,y:f.y-115*f.z,s:'-5',c:'#7ddc4a',t:30,m:30,sz:20})}if(tf%7==0)pt.push({x:f.x+(R()-.5)*30,y:f.y-30-R()*60,vx:0,vy:-1,t:20,m:20,c:'#7ddc4a',r:4})}if(f.spn>0){f.spn--;if(f.spn%10==0)foes(f).forEach(v=>{if(v.hp>0&&Math.abs(v.x-f.x)<90*f.z&&Math.abs(v.y-f.y)<80)hit(v,7,(v.x>f.x?1:-1)*6,2)})}if(f.sc>0)f.sc--;if(f.at>0)f.at--;if(f.sa>0)f.sa--;if(f.sh>0)f.sh--;if(f.refl>0)f.refl--;if(f.buff>0)f.buff--;
 if(tf-f.lh>180&&f.stun==0&&f.hp>0)f.hp=Math.min(f.max,f.hp+.07);
@@ -293,7 +296,7 @@ else if(f.rl>0){f.rl--;if(!f.rl)f.vx*=.3}
 else if(i.b&&g&&(i.l||i.r)&&!f.rlc){f.rl=22;f.rlc=42;f.vx=(i.r?1:-1)*9}
 else{f.cr=g&&i.d?1:0;f.bk=i.b&&g&&!f.at&&f.bs>10?1:0;if(f.bk||f.cr)f.vx*=.5;else if(i.l)f.vx=-sp;else if(i.r)f.vx=sp;else if(g)f.vx*=.6;
 if(i.u&&!f.pu&&!f.bk&&!f.cr&&(g||f.jc<2)){f.vy=g?-13:-11.5;f.jc=g?1:f.jc+1;if(!g)f.fl=24;if(!g)X({type:'ring',x:f.x,y:f.y,c:'#fff',R:40,t:10,m:10,gr:1})}f.pu=i.u;
-if((i.p||i.k)&&!f.at&&!f.bk){const gm=escolheGolpe(f,i,g);if(gm)iniciaGolpe(f,gm)}
+if((i.p||i.k)&&!f.at&&!f.bk)comecaGolpe(f,i,g);
 if(i.s&&!f.sc&&!f.bk&&!f.mute)special(f,o)}
 
 if(f.mt2>0){f.mt2--;if(f.mt2%9==0)bl.push({x:Math.max(40,Math.min(W-40,o.x+(R()-.5)*240)),t:30,o:f,d:10,rad:56,met:1})}
@@ -392,19 +395,18 @@ if(paused){ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,W,400);ctx.fillStyle=
 if(net&&net.wait){ctx.fillStyle='rgba(0,0,0,.55)';ctx.fillRect(0,0,W,400);ctx.fillStyle='#fff';ctx.font='34px Bangers,Impact,sans-serif';ctx.textAlign='center';ctx.fillText('Sincronizando com o outro jogador...',W/2,210)}
 if(mt>0&&msg){ctx.font='84px Bangers,Impact,sans-serif';ctx.lineWidth=8;ctx.strokeStyle='#10252b';ctx.strokeText(msg,W/2,215);ctx.fillStyle='#ffd23f';ctx.fillText(msg,W/2,215);ctx.font='26px Bangers,Impact,sans-serif';ctx.lineWidth=6;ctx.strokeStyle='#10252b';ctx.strokeText((STG[stg].n+(sty?' · '+E.h.n:'')),W/2,255);ctx.fillStyle='#f1ede4';ctx.fillText((STG[stg].n+(sty?' · '+E.h.n:'')),W/2,255)}}
 const STG=[
-{n:'Cidade à noite',s:['#14303a','#7a3b3b'],g:'#1d2c33',d(){ctx.fillStyle='#f4e3b5';ctx.beginPath();ctx.arc(W*.8,90,34,0,7);ctx.fill();ctx.fillStyle='#0c1a1f';for(let x=0;x<W;x+=50)ctx.fillRect(x,G-60-((x*37)%110),44,400)}},
+{n:'Cidade à noite',s:['#14303a','#7a3b3b'],g:'#1d2c33',d(){ctx.fillStyle='#0c1a1f';for(let x=0;x<W;x+=50)ctx.fillRect(x,G-60-((x*37)%110),44,400)}},
 {n:'Floresta mágica',s:['#0f3b2e','#6fae6a'],g:'#2e4a2a',d(){ctx.fillStyle='#0a2a1c';for(let x=0;x<W;x+=70){const h=90+((x*53)%70);ctx.beginPath();ctx.moveTo(x,G);ctx.lineTo(x+35,G-h);ctx.lineTo(x+70,G);ctx.fill()}ctx.fillStyle='#ffe98a';for(let i=0;i<14;i++){ctx.globalAlpha=.5+.5*Math.sin(tf*.05+i);ctx.beginPath();ctx.arc((i*97+tf*.3*(i%3+1))%W,120+((i*41)%160),2.5,0,7);ctx.fill()}ctx.globalAlpha=1}},
-{n:'Deserto ao pôr do sol',s:['#ff7a3d','#ffd08a'],g:'#c98a4b',d(){ctx.fillStyle='#fff1b8';ctx.beginPath();ctx.arc(W/2,G-30,80,0,7);ctx.fill();ctx.fillStyle='#d99a5a';for(let x=-100;x<W+100;x+=260){ctx.beginPath();ctx.ellipse(x+130,G+10,170,60+((x*7)%30),0,Z,0);ctx.fill()}ctx.fillStyle='#6b8f3a';[[120,60],[W-160,80],[W/2+240,50]].forEach(([x,h])=>{ctx.fillRect(x,G-h,12,h);ctx.fillRect(x-12,G-h*.7,12,6);ctx.fillRect(x-12,G-h*.7-14,6,14);ctx.fillRect(x+12,G-h*.5,12,6);ctx.fillRect(x+18,G-h*.5-14,6,14)})}},
+{n:'Deserto ao pôr do sol',s:['#ff7a3d','#ffd08a'],g:'#c98a4b',d(){ctx.fillStyle='#d99a5a';for(let x=-100;x<W+100;x+=260){ctx.beginPath();ctx.ellipse(x+130,G+10,170,60+((x*7)%30),0,Z,0);ctx.fill()}ctx.fillStyle='#6b8f3a';[[120,60],[W-160,80],[W/2+240,50]].forEach(([x,h])=>{ctx.fillRect(x,G-h,12,h);ctx.fillRect(x-12,G-h*.7,12,6);ctx.fillRect(x-12,G-h*.7-14,6,14);ctx.fillRect(x+12,G-h*.5,12,6);ctx.fillRect(x+18,G-h*.5-14,6,14)})}},
 {n:'Montanhas de gelo',s:['#0b1d3a','#6fc3e8'],g:'#cfe9f5',d(){ctx.strokeStyle='rgba(120,255,190,.35)';ctx.lineWidth=26;for(let k=0;k<2;k++){ctx.beginPath();for(let x=0;x<=W;x+=40)ctx.lineTo(x,70+k*40+Math.sin(tf*.02+x*.01+k)*22);ctx.stroke()}ctx.fillStyle='#e9fbff';for(let x=0;x<W;x+=160){const h=80+((x*29)%80);ctx.beginPath();ctx.moveTo(x,G);ctx.lineTo(x+80,G-h);ctx.lineTo(x+160,G);ctx.fill()}ctx.fillStyle='#fff';for(let i=0;i<40;i++){ctx.beginPath();ctx.arc((i*83+tf*.3)%W,(i*47+tf*(.8+i%3*.4))%G,2,0,7);ctx.fill()}}},
 {n:'Vulcão em erupção',s:['#1b0a0a','#a8321a'],g:'#2b1512',d(){ctx.fillStyle='#3a1a14';ctx.beginPath();ctx.moveTo(W*.45,G);ctx.lineTo(W*.68,120);ctx.lineTo(W*.74,120);ctx.lineTo(W*.97,G);ctx.fill();ctx.fillStyle='#ff6a1a';ctx.beginPath();ctx.ellipse(W*.71,120,24,8,0,0,7);ctx.fill()},f(){ctx.fillStyle='#ff6a1a';ctx.fillRect(0,G,W,5);ctx.fillStyle='#ffb347';for(let i=0;i<24;i++){ctx.globalAlpha=.7;ctx.beginPath();ctx.arc((i*61+Math.sin(tf*.03+i)*30)%W,G-((tf*(.6+i%4*.3)+i*37)%260),2.5,0,7);ctx.fill()}ctx.globalAlpha=1}},
 {n:'Estação espacial',s:['#05060f','#1a1440'],g:'#30334a',d(){ctx.fillStyle='#fff';for(let i=0;i<60;i++){ctx.globalAlpha=.4+.6*Math.abs(Math.sin(tf*.03+i));ctx.fillRect((i*131)%W,(i*71)%250,2,2)}ctx.globalAlpha=1;ctx.fillStyle='#5b6cff';ctx.beginPath();ctx.arc(W*.78,110,60,0,7);ctx.fill();ctx.strokeStyle='#c5cae9';ctx.lineWidth=5;ctx.beginPath();ctx.ellipse(W*.78,110,92,20,-.3,0,7);ctx.stroke()},f(){ctx.strokeStyle='#4a4f6d';ctx.lineWidth=2;for(let x=0;x<W;x+=60){ctx.beginPath();ctx.moveTo(x,G);ctx.lineTo(x-30,G+70);ctx.stroke()}}},
 {n:'Cidade neon sob chuva',s:['#10061f','#3a1f66'],g:'#1a1030',d(){ctx.fillStyle='#0a0618';for(let x=0;x<W;x+=60){const h=100+((x*41)%140);ctx.fillRect(x,G-h,50,h)}const c=['#ff2e93','#2ee6ff','#ffe14d'];for(let x=0;x<W;x+=60){ctx.fillStyle=c[(x/60|0)%3];ctx.globalAlpha=.7;ctx.fillRect(x+8,G-90-((x*41)%140)*.3,34,8)}ctx.globalAlpha=1;ctx.strokeStyle='rgba(180,200,255,.35)';ctx.lineWidth=1.5;for(let i=0;i<70;i++){const x=(i*47+tf*3)%W,y=(i*83+tf*14)%G;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-4,y+14);ctx.stroke()}}},
-{n:'Praia ao entardecer',s:['#ff7e5f','#feb47b'],g:'#e8c98f',d(){ctx.fillStyle='#ffe9a8';ctx.beginPath();ctx.arc(W*.7,G-40,70,0,7);ctx.fill();ctx.fillStyle='rgba(30,90,140,.55)';ctx.fillRect(0,G-60,W,60);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=3;for(let k=0;k<4;k++){ctx.beginPath();for(let x=0;x<=W;x+=30)ctx.lineTo(x,G-50+k*12+Math.sin(tf*.05+x*.03+k)*4);ctx.stroke()}[120,W-140].forEach((x,k)=>{ctx.fillStyle='#5a3a1f';ctx.fillRect(x,G-110,8,110);ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.ellipse(x+4,G-112,46,12,k?.4:-.4,0,7);ctx.fill()})}},
+{n:'Praia ao entardecer',s:['#ff7e5f','#feb47b'],g:'#e8c98f',d(){ctx.fillStyle='rgba(30,90,140,.55)';ctx.fillRect(0,G-60,W,60);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=3;for(let k=0;k<4;k++){ctx.beginPath();for(let x=0;x<=W;x+=30)ctx.lineTo(x,G-50+k*12+Math.sin(tf*.05+x*.03+k)*4);ctx.stroke()}[120,W-140].forEach((x,k)=>{ctx.fillStyle='#5a3a1f';ctx.fillRect(x,G-110,8,110);ctx.fillStyle='#2e7d32';ctx.beginPath();ctx.ellipse(x+4,G-112,46,12,k?.4:-.4,0,7);ctx.fill()})}},
 {n:'Castelo na colina',s:['#1b2a49','#b0c4de'],g:'#4a6b3a',d(){ctx.fillStyle='#8a7f77';ctx.fillRect(W*.6,G-170,200,170);for(let k=0;k<5;k++)ctx.fillRect(W*.6+k*44,G-190,28,26);ctx.fillRect(W*.6+70,G-250,60,90);ctx.fillStyle='#b03030';ctx.beginPath();ctx.moveTo(W*.6+64,G-250);ctx.lineTo(W*.6+100,G-300);ctx.lineTo(W*.6+136,G-250);ctx.fill();ctx.fillStyle='#ffd23f';ctx.fillRect(W*.6+92,G-220,16,24);ctx.fillStyle='#3d5a30';ctx.beginPath();ctx.ellipse(W*.3,G+10,380,90,0,Z,0);ctx.fill()}},
 {n:'Coliseu',s:['#e9a23b','#fbe3a6'],g:'#cdb07a',d(){for(let k=0;k<10;k++){const x=k*110-20;ctx.fillStyle='#b08a52';ctx.fillRect(x,G-190,100,190);ctx.fillStyle='#7a5a30';for(let j=0;j<3;j++){ctx.beginPath();ctx.arc(x+50,G-60-j*55,22,Z,0);ctx.lineTo(x+72,G-30-j*55);ctx.lineTo(x+28,G-30-j*55);ctx.fill()}}}},
 {n:'Caverna de cristais',s:['#0b0720','#2a1a5e'],g:'#1d1540',d(){const c=['#7dd3fc','#c084fc','#f0abfc'];for(let x=-20;x<W;x+=90){const h=80+((x*29)%110);ctx.fillStyle=c[(x/90|0)%3];ctx.globalAlpha=.75;ctx.beginPath();ctx.moveTo(x,G);ctx.lineTo(x+30,G-h);ctx.lineTo(x+60,G);ctx.fill();ctx.beginPath();ctx.moveTo(x+30,0);ctx.lineTo(x+55,30+h*.4);ctx.lineTo(x+80,0);ctx.fill()}ctx.globalAlpha=1}},
 {n:'Ponte sobre o rio',s:['#243b55','#8fb8d8'],g:'#6b5b45',d(){ctx.fillStyle='rgba(20,40,70,.55)';ctx.fillRect(0,G-30,W,30);ctx.strokeStyle='#33261a';ctx.lineWidth=10;ctx.beginPath();ctx.moveTo(0,G-150);ctx.quadraticCurveTo(W/2,G-20,W,G-150);ctx.stroke();ctx.lineWidth=4;for(let x=40;x<W;x+=60){const t=x/W,y=(1-t)*(1-t)*(G-150)+2*t*(1-t)*(G-20)+t*t*(G-150);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,G-8);ctx.stroke()}}}];
-function bg(){const s=STG[stg],g=ctx.createLinearGradient(0,0,0,400);g.addColorStop(0,s.s[0]);g.addColorStop(1,s.s[1]);ctx.fillStyle=g;ctx.fillRect(0,0,W,400);s.d();ctx.fillStyle=s.g;ctx.fillRect(0,G,W,70);if(s.f)s.f()}
 function pickStage(){let n;do{n=R()*STG.length|0}while(n==stg);stg=n}
 let last=0,acc=0;
 function loop(ts){acc+=Math.min(100,ts-last);last=ts;while(acc>=16.67){if(paused&&!net){acc=0;break}if(net&&net.go&&st!='sel'){netPump();if(!netReady()){net.wait=1;break}net.wait=0}acc-=16.67;if(st!='sel')tick();if(net&&net.go)net.n++}if(st!='sel')draw();requestAnimationFrame(loop)}
@@ -612,7 +614,7 @@ b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(
 ['pointerup','pointercancel','lostpointercapture'].forEach(x=>b.addEventListener(x,up));b.addEventListener('contextmenu',e=>e.preventDefault())}
 function start(a,b){pi=a;ei=b;sty=md=='story'?1:0;wins=[0,0];rd=1;if(sty)newSy();if(md=='horde')hdAl=H.map((_,i)=>i).filter(i=>i!=pi).sort(()=>R()-.5).slice(0,2);const box=$('#pads');box.innerHTML='';
 for(let n=0;n<=mp;n++)montaControles(box,n,mp?'Jogador '+(n+1):'');
-$('#help').textContent=mp?'Jogador 1: A/D mover, W pular (2x no ar), F soco, G especial, H defender. Jogador 2: setas mover e pular, K soco, L especial, J defender. No celular, cada jogador usa os próprios botões.':(sty?'História: derrote 4 vilões e depois o chefe Ômega, com 2 aliados ao seu lado. ':'')+'Teclado: A/D ou setas mover, W ou ↑ pular, F ou K soco, G ou L especial, H ou J defender, R ou I chute, S ou ↓ agachar. Dá para pular duas vezes (pirueta). Pegue as esferas que caem (verde cura, amarela dá poder). No celular, use os botões.';
+$('#help').textContent=mp?'Jogador 1: A/D mover, W pular (2x no ar), F soco, G especial, H defender. Jogador 2: setas mover e pular, K soco, L especial, J defender. No celular, cada jogador usa os próprios botões.':(sty?'História: derrote 4 vilões e depois o chefe Ômega, com 2 aliados ao seu lado. ':'')+'Teclado: A/D ou setas mover, W ou ↑ pular, F ou K soco, G ou L especial, H ou J defender, R ou I chute, S ou ↓ agachar. Soco várias vezes faz o combo do herói. Para trás + soco ou chute, e agachado + soco ou chute, dão golpes diferentes. Dá para pular duas vezes (pirueta). A lista completa está no botão Pausar. Pegue as esferas que caem (verde cura, amarela dá poder). No celular, use os botões.';
 paused=false;$('#pz').hidden=false;$('#pz').textContent='⏸ Pausar';$('#pm').hidden=true;$('#fin').hidden=true;show('game');md=='horde'?horde():round()}
 $('#rematch').onclick=()=>{paused=false;$('#pz').textContent='⏸ Pausar';if(net){if(net.idx==0)netStart();else{net.r.presence({rq:Date.now()}).catch(()=>{});$('#res').textContent='Pedido de revanche enviado...'}return}wins=[0,0];rd=1;if(sty)newSy();$('#fin').hidden=true;md=='horde'?horde():round()};
 $('#menu').onclick=()=>{if(net)netBye();st='sel';picks=[];show('modes');scrollTo(0,0)};
@@ -691,10 +693,10 @@ $('#qm').onclick=()=>{if(!window.Peer){onMsg(NOONLINE);return}qOn=1;$('#onbox').
 {const b0=$('#back2').onclick;$('#back2').onclick=()=>{qmStop();b0()}}
 </script>
 <script id="vg-golpes">
-// ================= GOLPES NOVOS (Etapa 2) =================
+// ================= GOLPES (Etapas 2 e 4) =================
 // Isto é SIMULAÇÃO: roda igual em todos os aparelhos do online. Só R(), nunca Math.random().
 const KEYS_IN = 'lrupsbkd';   // esquerda, direita, pular, soco, especial, defender, chute, baixo
-const VERSION = '2026.11.16-e2'; // suba sempre que mudar o online ou as regras da luta
+const VERSION = '2026.11.16-e5'; // suba sempre que mudar o online ou as regras da luta
 const MSG_VERSAO = 'Os dois aparelhos precisam estar com a mesma versão do jogo. Atualize a página.';
 let curAlt = null; // altura do golpe que está acertando agora ('m','a','b','ar'); null = especial (defende como hoje)
 
@@ -702,19 +704,71 @@ let curAlt = null; // altura do golpe que está acertando agora ('m','a','b','ar
 // alt: m médio, a alto (passa por cima de quem agacha), b baixo (só se defende agachado), ar aéreo (só se defende em pé)
 // st/ac/rc: quadros de preparação / golpe / recuperação · rch: alcance · dm: multiplica o dano do herói · kb: empurrão
 // ef: kd derruba, up lança para cima · adv: avanço por quadro · air: golpe no ar (acaba ao pousar)
-// low: 1 baixo só na preparação, 2 baixo o golpe todo · nx: próximo golpe do combo · fx: onomatopeia
+// low: 1 baixo só na preparação, 2 baixo o golpe todo · fx: onomatopeia · an: animação (se for diferente do nome)
+// rep: acerta de novo a cada N quadros (golpe de vários acertos) · area: 'roda' acerta dos dois lados, 'chao' idem só em quem está no chão
+// conf/psn: deixa confuso/envenenado · pull: puxa o alvo para perto · tp: teleporta para as costas do alvo
+// back: recua depois do golpe · iv: fica invisível · pc: cor das faíscas · ring: cor da onda · quica: quem acerta quica para cima
 const MV = {
-  jab:       { alt: 'm', st: 4, ac: 3, rc: 8, rch: 70, dm: .7, kb: 4, adv: 2, nx: 'direto', fx: 'PÁ!' },
-  direto:    { alt: 'm', st: 5, ac: 3, rc: 10, rch: 76, dm: .9, kb: 5, adv: 2, nx: 'forte', fx: 'PÁ!' },
+  jab:       { alt: 'm', st: 4, ac: 3, rc: 8, rch: 70, dm: .7, kb: 4, adv: 2, fx: 'PÁ!' },
+  direto:    { alt: 'm', st: 5, ac: 3, rc: 10, rch: 76, dm: .9, kb: 5, adv: 2, fx: 'PÁ!' },
+  joelhada:  { alt: 'm', st: 4, ac: 3, rc: 9, rch: 62, dm: .8, kb: 5, adv: 3, fx: 'TUC!' },
+  pesado:    { alt: 'm', st: 7, ac: 4, rc: 12, rch: 80, dm: 1.25, kb: 9, adv: 2, fx: 'BUM!' },
   forte:     { alt: 'm', st: 7, ac: 4, rc: 14, rch: 78, dm: 1.3, kb: 10, adv: 3, fx: 'BUM!' },
   chute:     { alt: 'm', st: 7, ac: 4, rc: 12, rch: 88, dm: 1.1, kb: 9, adv: 1, fx: 'TUM!' },
   giratorio: { alt: 'a', st: 10, ac: 4, rc: 16, rch: 92, dm: 1.4, kb: 8, ef: 'kd', adv: 1, fx: 'WHAM!' },
   rasteira:  { alt: 'b', st: 7, ac: 5, rc: 16, rch: 92, dm: .8, kb: 3, ef: 'kd', adv: 2, low: 2, fx: 'ZUP!' },
   gancho:    { alt: 'm', st: 6, ac: 4, rc: 16, rch: 64, dm: 1.2, kb: 4, ef: 'up', adv: 1, low: 1, fx: 'BUM!' },
+  girosoco:  { alt: 'a', st: 9, ac: 4, rc: 14, rch: 84, dm: 1.3, kb: 13, adv: 1, fx: 'PLAFT!' },       // trás + soco
+  mortal:    { alt: 'm', st: 5, ac: 6, rc: 18, rch: 72, dm: 1.2, kb: 4, ef: 'up', adv: 1, back: 1, fx: 'VUPT!' }, // trás + chute
   voadora:   { alt: 'ar', st: 5, ac: 30, rc: 0, rch: 80, dm: 1.3, kb: 12, ef: 'kd', adv: 8, air: 1, fx: 'POW!' },
   martelo:   { alt: 'ar', st: 4, ac: 30, rc: 0, rch: 66, dm: 1, kb: 6, air: 1, fx: 'TOC!' },
+  pisao:     { alt: 'ar', st: 4, ac: 30, rc: 0, rch: 50, dm: 1.1, kb: 5, adv: 4, air: 1, quica: 1, fx: 'TOIM!' }, // no ar: baixo + chute
   pouso:     { alt: 'm', st: 0, ac: 0, rc: 6, rch: 0, dm: 0, kb: 0 },
+  // ---- golpe-assinatura de cada herói (último toque do combo de soco) ----
+  s_wulkan:   { alt: 'm', st: 5, ac: 9, rc: 12, rch: 84, dm: .55, kb: 4, rep: 3, adv: 2, an: 'multichute', pc: '#ffd23f', fx: 'TA-TA-TÁ!' },
+  s_rodrigo:  { alt: 'm', st: 9, ac: 4, rc: 16, rch: 95, dm: 1.5, kb: 9, area: 'chao', an: 'socochao', ring: '#cfd8dc', fx: 'CRAAC!' },
+  s_david:    { alt: 'a', st: 8, ac: 10, rc: 16, rch: 92, dm: .8, kb: 8, rep: 5, ef: 'kd', adv: 1, an: 'giro2', fx: 'SWISH!' },
+  s_caio:     { alt: 'm', st: 6, ac: 4, rc: 16, rch: 68, dm: 1.5, kb: 4, ef: 'up', adv: 1, low: 1, an: 'gancho', pc: '#ff7a1a', fx: 'FWOOSH!' },
+  s_lucas:    { alt: 'b', st: 6, ac: 10, rc: 14, rch: 80, dm: 1, kb: 3, ef: 'kd', adv: 7, low: 2, an: 'deslize', pc: '#bfe9ff', fx: 'CRACK!' },
+  s_bianca:   { alt: 'm', st: 6, ac: 4, rc: 14, rch: 150, dm: 1.3, kb: 6, ef: 'up', pull: 45, an: 'joelhada2', ring: '#e040b0', fx: 'VRRUM!' },
+  s_camila:   { alt: 'm', st: 4, ac: 8, rc: 12, rch: 72, dm: .7, kb: 6, rep: 4, adv: 2, back: 1, an: 'garras', fx: 'RAWR!' },
+  s_helena:   { alt: 'm', st: 7, ac: 4, rc: 14, rch: 110, dm: 1.4, kb: 16, an: 'palma', ring: '#c9c9d6', fx: 'ZZAP!' },
+  s_marcos:   { alt: 'm', st: 7, ac: 8, rc: 14, rch: 70, dm: 1.5, kb: 15, adv: 7, an: 'investida', fx: 'CLANG!' },
+  s_sofia:    { alt: 'a', st: 8, ac: 5, rc: 14, rch: 92, dm: 1.3, kb: 8, ef: 'kd', adv: 1, an: 'giratorio', pc: '#ffd54f', fx: 'SHINE!' },
+  s_joe:      { alt: 'm', st: 5, ac: 12, rc: 12, rch: 86, dm: .8, kb: 9, rep: 6, adv: 5, an: 'voadora2', fx: 'KABOOM!' },
+  s_otavio:   { alt: 'm', st: 6, ac: 16, rc: 14, rch: 80, dm: .5, kb: 5, rep: 4, area: 'roda', an: 'piao', pc: '#fff176', fx: 'WHOOSH!' },
+  s_luiza:    { alt: 'm', st: 7, ac: 6, rc: 14, rch: 82, dm: 1, kb: 6, area: 'roda', conf: 60, an: 'piao', ring: '#ffd6f5', fx: 'OOOH!' },
+  s_michel:   { alt: 'm', st: 7, ac: 4, rc: 14, rch: 105, dm: 1.4, kb: 15, an: 'palma', ring: '#7aa2ff', fx: 'BZZT!' },
+  s_henrique: { alt: 'm', st: 11, ac: 4, rc: 18, rch: 100, dm: 1.9, kb: 10, ef: 'kd', adv: 1, an: 'machadada', fx: 'TCHAC!' },
+  s_tom:      { alt: 'm', st: 6, ac: 4, rc: 14, rch: 80, dm: 1.4, kb: 11, tp: 1, an: 'chute', ring: '#5c4b8a', fx: 'ZAP!' },
+  s_katz:     { alt: 'm', st: 9, ac: 4, rc: 16, rch: 76, dm: 1.7, kb: 6, ef: 'kd', adv: 1, an: 'martelo2', fx: 'BONK!' },
+  s_juju:     { alt: 'm', st: 8, ac: 4, rc: 15, rch: 78, dm: 1.5, kb: 6, ef: 'kd', adv: 1, an: 'machadada', pc: '#ff7a3d', fx: 'BOOM!' },
+  s_harry:    { alt: 'm', st: 7, ac: 5, rc: 16, rch: 66, dm: 1.4, kb: 20, adv: 5, an: 'barrigada', fx: 'BOING!' },
+  s_nando:    { alt: 'm', st: 7, ac: 4, rc: 13, rch: 88, dm: 1.1, kb: 8, psn: 90, adv: 1, an: 'chute', pc: '#7ddc4a', fx: 'SPLASH!' },
+  s_beni:     { alt: 'b', st: 7, ac: 5, rc: 14, rch: 100, dm: 1, kb: 3, ef: 'kd', adv: 5, low: 2, iv: 14, an: 'rasteira', fx: 'PUF!' },
+  s_vampira:  { alt: 'm', st: 6, ac: 12, rc: 14, rch: 90, dm: .5, kb: 3, rep: 4, an: 'palma', pc: '#e91e63', fx: 'FLAP!' },
+  s_bernardo: { alt: 'm', st: 3, ac: 6, rc: 10, rch: 72, dm: .7, kb: 7, rep: 3, adv: 2, an: 'tapa', pc: '#ffd23f', fx: 'PLAFT!' },
+  s_gustavo:  { alt: 'm', st: 9, ac: 4, rc: 16, rch: 100, dm: 1.3, kb: 3, ef: 'up', area: 'chao', an: 'pisaochao', ring: '#a1887f', fx: 'CRAC!' },
+  s_isabela:  { alt: 'm', st: 7, ac: 4, rc: 13, rch: 96, dm: 1, kb: 22, adv: 1, an: 'chute', pc: '#e0f7fa', fx: 'FUUUSH!' },
+  s_mariana:  { alt: 'b', st: 6, ac: 10, rc: 14, rch: 80, dm: 1, kb: 3, ef: 'kd', adv: 7, low: 2, an: 'deslize', pc: '#80d8ff', fx: 'SPLASH!' },
 };
+const SIG = { Wulkan: 's_wulkan', Rodrigo: 's_rodrigo', David: 's_david', Caio: 's_caio', Lucas: 's_lucas', Bianca: 's_bianca', Camila: 's_camila', Helena: 's_helena', Marcos: 's_marcos', Sofia: 's_sofia', Joe: 's_joe', 'Otávio': 's_otavio', Luiza: 's_luiza', Michel: 's_michel', Henrique: 's_henrique', Tom: 's_tom', Katz: 's_katz', Juju: 's_juju', 'Harry Burger': 's_harry', Nando: 's_nando', Beni: 's_beni', Vampira: 's_vampira', Bernardo: 's_bernardo', Gustavo: 's_gustavo', Isabela: 's_isabela', Mariana: 's_mariana' };
+
+// Jeito de lutar de cada tipo: k = velocidade dos golpes (menor = mais rápido) e o combo de soco (o último é a assinatura).
+const ESTILO = {
+  Velocista: { k: .85, combo: ['jab', 'direto', 'joelhada'] },
+  Tanque: { k: 1.3, combo: ['pesado'] },
+  'Mágico': { k: 1.05, combo: ['jab', 'direto'] },
+  Elemental: { k: 1, combo: ['jab', 'direto'] },
+};
+const estiloDe = f => ESTILO[f.h.cat] || ESTILO.Elemental;
+function comboDe(f) { const e = estiloDe(f); return e.combo.concat(SIG[f.h.n] || 'forte'); }
+// Tempos do golpe para este lutador: [preparação, golpe, recuperação].
+function temposDe(f, m) {
+  if (m.air) return [m.st, m.ac, m.rc];
+  const k = estiloDe(f).k;
+  return [m.st ? Math.max(2, Math.round(m.st * k)) : 0, m.ac, Math.round(m.rc * k)];
+}
 
 // Caído, levantando, no começo da pirueta ou no meio do rolamento: ninguém acerta.
 const invencivel = o => o.kd > 0 || o.gu > 0 || o.fl > 14 || (o.rl >= 6 && o.rl <= 20);
@@ -727,73 +781,104 @@ function podeDefender(o, alt) {
 
 // Qual golpe sai: nunca mais que direção + 1 botão.
 function escolheGolpe(f, i, g) {
-  const frente = f.face > 0 ? i.r : i.l;
-  if (i.k) { if (!g) return 'voadora'; if (i.d) return 'rasteira'; if (frente) return 'giratorio'; return 'chute'; }
-  if (i.p) { if (!g) return 'martelo'; if (i.d) return 'gancho'; return 'jab'; }
+  const frente = f.face > 0 ? i.r : i.l, tras = f.face > 0 ? i.l : i.r;
+  if (i.k) { if (!g) return i.d ? 'pisao' : 'voadora'; if (i.d) return 'rasteira'; if (frente) return 'giratorio'; if (tras) return 'mortal'; return 'chute'; }
+  if (i.p) { if (!g) return 'martelo'; if (i.d) return 'gancho'; if (tras) return 'girosoco'; return comboDe(f)[0]; }
   return null;
 }
-function iniciaGolpe(f, id) {
-  f.mv = id; f.mt = 0; f.mhs = []; f.at = 1;
+function iniciaGolpe(f, id, ci) {
+  f.mv = id; f.mt = 0; f.mhs = []; f.at = 1; f.ci = ci == null ? -1 : ci;
   if (id == 'martelo') f.vy = Math.max(f.vy, 4);
   if (id == 'voadora') f.vy = Math.min(f.vy, -1.5);
+  if (id == 'pisao') f.vy = Math.max(f.vy, 9);
+  if (id == 'mortal' || id == 'girosoco') f.vx = 0; // nasceram de "trás + botão": não deixa o passo para trás afastar o golpe
+  if (MV[id].iv) f.iv = Math.max(f.iv, MV[id].iv);
+}
+// Chamado pelo controle livre quando soco ou chute é apertado.
+function comecaGolpe(f, i, g) {
+  const id = escolheGolpe(f, i, g);
+  if (id) iniciaGolpe(f, id, i.p && !i.k && g && !i.d && id == comboDe(f)[0] ? 0 : -1);
 }
 
 // Um quadro do golpe em andamento.
 function golpeStep(f, o, i, g) {
-  const m = MV[f.mv], t = ++f.mt, fim = m.st + m.ac;
-  f.cr = m.low == 2 || (m.low == 1 && t <= m.st) ? 1 : 0;
+  const m = MV[f.mv], t = ++f.mt, T = temposDe(f, m), st = T[0], fim = st + T[1];
+  f.cr = m.low == 2 || (m.low == 1 && t <= st) ? 1 : 0;
   if (m.air) {
     if (g && t > 1) { iniciaGolpe(f, 'pouso'); return; }
     if (m.adv) f.vx = f.face * m.adv;
-    if (t > m.st) acerta(f, m);
+    if (t > st) acerta(f, m);
+    if (!f.mv) return; // o pisão quica e encerra o golpe
     f.at = Math.max(1, fim - t);
     if (t >= fim) { f.mv = null; f.at = 0; }
     return;
   }
-  if (t <= fim) f.vx = m.adv ? f.face * m.adv : f.vx * .7; else if (g) f.vx *= .6;
-  if (t > m.st && t <= fim && m.dm) acerta(f, m);
-  const tot = fim + m.rc;
+  if (t == st + 1) {
+    if (m.tp && o) { f.x = Math.max(30, Math.min(W - 30, o.x + f.face * 48)); f.face = -f.face; X({ type: 'ring', x: f.x, y: f.y - 60, c: m.ring, R: 70, t: 12, m: 12 }); }
+    if (m.area) { shake = Math.max(shake, m.area == 'chao' ? 9 : 4); X({ type: 'ring', x: f.x, y: m.area == 'chao' ? G : f.y - 55 * f.z, c: m.ring || m.pc || '#fff', R: m.rch * f.z * 1.25, t: 18, m: 18, gr: m.area == 'chao' ? 1 : 0 }); if (m.area == 'chao') dust(f.x, G, 8); }
+    else if (m.ring) X({ type: 'ring', x: f.x + f.face * 40, y: f.y - 62 * f.z, c: m.ring, R: 70, t: 14, m: 14 });
+  }
+  if (t <= fim) f.vx = m.adv ? f.face * m.adv : f.vx * .7;
+  else if (m.back) f.vx = -f.face * 7 * Math.max(0, 1 - (t - fim) / 10);
+  else if (g) f.vx *= .6;
+  if (t > st && t <= fim && m.dm) {
+    if (m.rep && (t - st - 1) % m.rep == 0) f.mhs = [];
+    acerta(f, m);
+  }
+  const tot = fim + T[2];
   f.at = Math.max(0, tot - t);
-  if (m.nx && t > fim && i.p && !i.d) { iniciaGolpe(f, m.nx); return; } // combo: soco tocado ou segurado encadeia
+  if (f.ci >= 0 && t > fim && i.p && !i.d) { // combo: soco tocado ou segurado encadeia até a assinatura
+    const c = comboDe(f);
+    if (f.ci + 1 < c.length) { iniciaGolpe(f, c[f.ci + 1], f.ci + 1); return; }
+  }
   if (t >= tot) { f.mv = null; f.at = 0; }
 }
 
-// Confere quem está no alcance do golpe (cada um só uma vez por golpe).
+// Confere quem está no alcance do golpe (cada um só uma vez por acerto).
 function acerta(f, m) {
   const L = f.mhs || (f.mhs = []);
   for (const v of foes(f)) {
     if (v.hp <= 0 || L.includes(v) || invencivel(v)) continue;
     const dx = (v.x - f.x) * f.face, rch = m.rch * f.z + (hz(v) - 1) * 25 + 12 * ((v.h.wd || 1) - 1);
-    if (dx < -12 || dx > rch) continue;
+    if (m.area ? Math.abs(v.x - f.x) > rch : (dx < -12 || dx > rch)) continue;
     let ok;
-    if (m.alt == 'b') ok = v.y >= G - 14;
+    if (m.alt == 'b' || m.area == 'chao') ok = v.y >= G - 14;
     else if (m.alt == 'ar') ok = Math.abs((v.y - 50 * hz(v)) - (f.y - 30 * f.z)) < 62 * Math.max(f.z, hz(v));
     else ok = Math.abs(v.y - f.y) < 70 * f.z && !(m.alt == 'a' && v.cr);
     if (!ok) continue;
     L.push(v);
-    const B = f.buff > 0, grande = f.z > (f.h.big || 1) * 1.3;
+    const B = f.buff > 0, grande = f.z > (f.h.big || 1) * 1.3, dir = m.area ? (v.x >= f.x ? 1 : -1) : f.face;
     cur = f; curAlt = m.alt;
-    const foi = hit(v, f.h.dmg * (B ? 1.3 : 1) * (grande ? 1.6 : 1) * m.dm, f.face * m.kb);
+    const foi = hit(v, f.h.dmg * (B ? 1.3 : 1) * (grande ? 1.6 : 1) * m.dm, dir * m.kb);
     curAlt = null;
     if (!foi) continue;
-    X({ type: 'txt', x: v.x - f.face * 10, y: v.y - 80 * hz(v), s: m.fx, c: '#fff', t: 24, m: 24, sz: 30 });
-    if (f.h.sp == 'ice') { v.slow = 40; v.sk = 2; } // o soco do Lucas congela (agora vale para os golpes dele)
-    if (m.ef == 'kd') { v.kd = 40; v.stun = 0; v.lch = 0; v.vy = Math.min(v.vy, -6); v.vx = f.face * Math.max(5, m.kb * .6); }
-    else if (m.ef == 'up') { v.lch = 1; v.vy = -13; v.stun = 30; v.vx = f.face * 3; }
+    X({ type: 'txt', x: v.x - dir * 10, y: v.y - 80 * hz(v), s: m.fx, c: '#fff', t: 24, m: 24, sz: 30 });
+    if (m.pc) for (let n = 0; n < 6; n++) pt.push({ x: v.x, y: v.y - 60 * hz(v), vx: dir * R() * 7 + (R() - .5) * 4, vy: -R() * 6, t: 18, m: 18, g: .3, c: m.pc, r: 4 });
+    if (f.h.sp == 'ice') { v.slow = 40; v.sk = 2; } // os golpes do Lucas congelam
+    if (m.conf) v.conf = Math.max(v.conf, m.conf);
+    if (m.psn) v.psn = Math.max(v.psn, m.psn);
+    if (m.pull) v.x = Math.max(30, Math.min(W - 30, f.x + f.face * m.pull));
+    if (m.ef == 'kd') { v.kd = 40; v.stun = 0; v.lch = 0; v.vy = Math.min(v.vy, -6); v.vx = dir * Math.max(5, m.kb * .6); }
+    else if (m.ef == 'up') { v.lch = 1; v.vy = -13; v.stun = 30; v.vx = dir * 3; }
+    if (m.quica) { f.vy = -10; f.mv = null; f.at = 0; return; }
   }
 }
 
-// O bot aprende os golpes novos (frequência cresce com a dificuldade lv).
+// O bot usa os golpes (frequência cresce com a dificuldade lv). O combo e a assinatura saem pelo soco normal.
 function aiGolpes(f, o, q, d, g, lv) {
   if (f.at || f.mv) return;
   const fw = o.x > f.x;
   if (g && d < 95 * f.z && R() < .02 + lv * .06) {
     q.k = 1; q.p = 0; q.l = q.r = 0;
+    const r = R();
     if (o.bk && R() < .3 + lv * .5) q.d = 1;
-    else if (R() < .35) fw ? q.r = 1 : q.l = 1;
-  } else if (!g && d < 130 && f.vy > -6 && R() < .08 + lv * .2) q.k = 1;
-  else if (g && o.y < G - 40 && d < 85 && R() < lv * .25) { q.d = 1; q.p = 1; q.k = 0; }
-  if (o.mv == 'rasteira' && o.mt < 6 && d < 120 && lv >= .65 && R() < lv * .6) { f.abk = 12; f.abd = 1; }
+    else if (r < .3) fw ? q.r = 1 : q.l = 1;      // giratório
+    else if (r < .42) fw ? q.l = 1 : q.r = 1;     // mortal
+  } else if (g && d < 90 * f.z && R() < lv * .012) { q.p = 1; q.k = 0; q.l = fw ? 1 : 0; q.r = fw ? 0 : 1; } // soco giratório
+  else if (!g && d < 60 && f.vy > 0 && R() < .1 + lv * .2) { q.k = 1; q.d = 1; }  // pisão
+  else if (!g && d < 130 && f.vy > -6 && R() < .08 + lv * .2) q.k = 1;             // voadora
+  else if (g && o.y < G - 40 && d < 85 && R() < lv * .25) { q.d = 1; q.p = 1; q.k = 0; } // gancho em quem pula
+  if (o.mv && MV[o.mv].alt == 'b' && o.mt < 6 && d < 120 && lv >= .65 && R() < lv * .6) { f.abk = 12; f.abd = 1; }
   if (lv >= .35 && g && R() < lv * .03 && pr.some(p => p.o.t !== f.t && Math.abs(p.x - f.x) < 200 && (p.vx > 0) == (f.x > p.x))) { q.b = 1; q.l = fw ? 1 : 0; q.r = fw ? 0 : 1; }
 }
 </script>
@@ -843,28 +928,56 @@ const STANCE = {
 };
 
 // Animações por poses-chave: cada chave tem duração d (quadros); back:1 volta para a guarda.
-// As durações batem com as fichas MV (preparação / golpe / recuperação).
+// As durações de cada animação seguem a sua ficha-base (ANIMT ou a ficha MV de mesmo nome): preparação / golpe / recuperação.
 const ANIM = {
   soco: [{ d: 5, s1: 15, e1: 125, t: 2 }, { d: 3, s1: 94, e1: 0, t: 16 }, { d: 4 }, { d: 6, back: 1 }],
   jab: [{ d: 2, t: 12, s1: 62, e1: 60 }, { d: 2, t: 15, s1: 96, e1: 0 }, { d: 3 }, { d: 8, back: 1 }],
   direto: [{ d: 3, t: 16, s2: 40, e2: 95, s1: 30, e1: 115 }, { d: 2, t: 26, s2: 94, e2: 0, h2: -28, k2: 6 }, { d: 3 }, { d: 10, back: 1 }],
+  joelhada: [{ d: 2, t: 8, h1: 50, k1: 90, s1: 30, e1: 110 }, { d: 2, t: -6, h1: 105, k1: 120, h2: -12, k2: 8, s1: -10, e1: 60, s2: -30, e2: 60 }, { d: 3 }, { d: 9, back: 1 }],
+  pesado: [{ d: 5, t: -12, s1: -20, e1: 110, h1: 10, k1: 20, h2: -25, k2: 20 }, { d: 2, t: 30, s1: 98, e1: 0, h1: 42, k1: 38, h2: -34, k2: 8 }, { d: 4 }, { d: 12, back: 1 }],
   forte: [{ d: 5, t: -6, s1: 5, e1: 135, h1: 12 }, { d: 2, t: 28, s1: 98, e1: 0, h1: 38, k1: 34, h2: -32, k2: 8 }, { d: 4 }, { d: 14, back: 1 }],
   chute: [{ d: 5, t: -8, h1: 95, k1: 120, h2: -8, k2: 10, s1: 15, e1: 125, s2: -25, e2: 95 }, { d: 2, t: -18, h1: 92, k1: 0 }, { d: 4 }, { d: 12, back: 1 }],
   giratorio: [{ d: 4, t: 12, h1: -5, k1: 30, h2: 15, k2: 10, s1: 60, e1: 80, s2: -20, e2: 60, sx: .2 }, { d: 4, sx: -1, t: -5, h1: 30, k1: 70 },
     { d: 2, sx: 1, t: -28, h1: 118, k1: 4, h2: -6, k2: 6, s1: -40, e1: 30, s2: 110, e2: 20 }, { d: 4 }, { d: 16, back: 1 }],
   rasteira: [{ d: 5, t: 32, h1: 92, k1: 92, h2: -75, k2: 5, s1: 40, e1: 90, s2: -20, e2: 60 }, { d: 2, h2: -20, k2: 60 }, { d: 3, h2: 82, k2: 2 }, { d: 2 }, { d: 16, back: 1 }],
   gancho: [{ d: 4, t: 22, h1: 45, k1: 70, h2: -25, k2: 60, s1: 20, e1: 140, s2: 20, e2: 110 }, { d: 2, t: 2, h1: 15, k1: 5, h2: -25, k2: 5, s1: 165, e1: 10 }, { d: 4 }, { d: 16, back: 1 }],
+  girosoco: [{ d: 4, t: 8, sx: .2, s1: 40, e1: 90 }, { d: 3, sx: -1, t: 0, s1: 120, e1: 20 }, { d: 2, sx: 1, t: -10, s1: 95, e1: 0, s2: -40, e2: 40, h1: 25, k1: 15, h2: -25, k2: 10 }, { d: 4 }, { d: 14, back: 1 }],
+  mortal: [{ d: 5, t: 20, h1: 60, k1: 95, h2: -20, k2: 80, s1: -30, e1: 20, s2: -40, e2: 20 }, { d: 3, lift: 38, r: -140, t: 0, h1: 120, k1: 10, h2: 60, k2: 120, s1: 60, e1: 90, s2: 40, e2: 90 },
+    { d: 3, lift: 44, r: -250, h1: 100, k1: 60 }, { d: 6, lift: 10, r: -360, t: 20, h1: 60, k1: 90, h2: -20, k2: 80, s1: 40, e1: 90, s2: 20, e2: 100 }, { d: 12, back: 1 }],
   voadora: [{ d: 5, t: -6, h1: 105, k1: 140, h2: 55, k2: 125, s1: 70, e1: 90, s2: 40, e2: 90 }, { d: 3, t: -22, h1: 62, k1: 0, h2: -15, k2: 115, s1: -50, e1: 20, s2: 130, e2: 30 }, { d: 99 }],
   martelo: [{ d: 4, t: 8, h1: 70, k1: 100, h2: -5, k2: 75, s1: 172, e1: 10, s2: 150, e2: 20 }, { d: 2, t: 32, s1: 70, e1: 8, s2: 62, e2: 20 }, { d: 99 }],
+  pisao: [{ d: 4, t: -10, h1: 95, k1: 120, h2: 80, k2: 120, s1: 150, e1: 20, s2: 140, e2: 20 }, { d: 2, t: 0, h1: 8, k1: 0, h2: 25, k2: 70, s1: 120, e1: 30, s2: -60, e2: 30 }, { d: 99 }],
   pouso: [{ d: 3, t: 20, h1: 72, k1: 100, h2: -30, k2: 85, s1: 50, e1: 90, s2: 20, e2: 90 }, { d: 3, back: 1 }],
+  // animações das assinaturas
+  multichute: [{ d: 5, t: -8, h1: 95, k1: 120, h2: -8, k2: 10, s1: 15, e1: 125, s2: -25, e2: 95 }, { d: 1, t: -16, h1: 92, k1: 0 }, { d: 2, h1: 100, k1: 95 }, { d: 1, h1: 70, k1: 0 }, { d: 2, h1: 100, k1: 95 }, { d: 1, h1: 112, k1: 0 }, { d: 2 }, { d: 12, back: 1 }],
+  socochao: [{ d: 6, t: -10, s1: 175, e1: 10, s2: 160, e2: 20, h1: 15, k1: 10, lift: 8 }, { d: 3, t: 55, h1: 75, k1: 110, h2: -35, k2: 95, s1: 40, e1: 5, s2: 60, e2: 20 }, { d: 4 }, { d: 16, back: 1 }],
+  giro2: [{ d: 4, t: 12, sx: .2, h1: -5, k1: 30 }, { d: 4, sx: -1, t: -5, h1: 30, k1: 70 }, { d: 2, sx: 1, t: -28, h1: 118, k1: 4, h2: -6, k2: 6, s1: -40, e1: 30, s2: 110, e2: 20 }, { d: 3, sx: -1 }, { d: 3, sx: 1 }, { d: 2 }, { d: 16, back: 1 }],
+  deslize: [{ d: 4, t: -35, h1: 75, k1: 5, h2: 60, k2: 80, s1: -40, e1: 30, s2: -60, e2: 20, hy: 14 }, { d: 2, t: -50, h1: 82, k1: 2 }, { d: 10 }, { d: 14, back: 1 }],
+  joelhada2: [{ d: 4, t: 10, s1: 95, e1: 0, s2: 85, e2: 5 }, { d: 2, t: -8, h1: 105, k1: 120, s1: 40, e1: 100, s2: 20, e2: 100 }, { d: 4 }, { d: 14, back: 1 }],
+  garras: [{ d: 2, t: 14, s1: 150, e1: 20, s2: 30, e2: 100 }, { d: 2, t: 22, s1: 40, e1: 20, s2: 140, e2: 20 }, { d: 4, t: 26, s1: 150, e1: 10, s2: 35, e2: 15 }, { d: 4, t: 18 },
+    { d: 5, lift: 30, r: -180, h1: 110, k1: 140, h2: 100, k2: 140 }, { d: 5, lift: 6, r: -360 }, { d: 2, back: 1 }],
+  palma: [{ d: 5, t: -8, s1: 20, e1: 120, s2: 10, e2: 125 }, { d: 2, t: 18, s1: 92, e1: 0, s2: 88, e2: 4, h1: 35, k1: 30, h2: -30, k2: 8 }, { d: 4 }, { d: 14, back: 1 }],
+  investida: [{ d: 5, t: -6, s1: 60, e1: 120, h1: 10, k1: 25 }, { d: 2, t: 34, s1: 75, e1: 95, s2: -40, e2: 60, h1: 55, k1: 60, h2: -45, k2: 25 }, { d: 8 }, { d: 14, back: 1 }],
+  voadora2: [{ d: 5, t: 20, h1: 60, k1: 95, h2: -20, k2: 80 }, { d: 3, lift: 26, t: -22, h1: 68, k1: 0, h2: -15, k2: 115, s1: -50, e1: 20, s2: 130, e2: 30 }, { d: 3, lift: 30, h1: 100, k1: 110 }, { d: 3, lift: 22, h1: 72, k1: 0 }, { d: 3, lift: 8 }, { d: 12, back: 1 }],
+  piao: [{ d: 6, t: 0, s1: 90, e1: 0, s2: -90, e2: 0, h1: 10, k1: 10, h2: -10, k2: 10 }, { d: 16 }, { d: 14, back: 1 }],
+  machadada: [{ d: 8, t: -14, s1: 185, e1: 10, s2: 170, e2: 15, h1: 10, k1: 15, lift: 4 }, { d: 3, t: 38, s1: 62, e1: 0, s2: 55, e2: 10, h1: 45, k1: 45, h2: -35, k2: 15 }, { d: 4 }, { d: 18, back: 1 }],
+  martelo2: [{ d: 6, t: -12, s1: 180, e1: 5, s2: 176, e2: 5, lift: 5 }, { d: 3, t: 40, s1: 58, e1: 0, s2: 54, e2: 0, h1: 50, k1: 55, h2: -30, k2: 20 }, { d: 4 }, { d: 16, back: 1 }],
+  barrigada: [{ d: 5, t: 10, s1: -30, e1: 20, s2: -50, e2: 20, h1: 5, k1: 20 }, { d: 2, t: -22, s1: -60, e1: 10, s2: -80, e2: 10, h1: 40, k1: 20, h2: -30, k2: 5 }, { d: 5 }, { d: 16, back: 1 }],
+  tapa: [{ d: 3, t: 10, s1: 130, e1: 30 }, { d: 2, t: 18, s1: 70, e1: 0 }, { d: 2, s1: 120, e1: 40 }, { d: 2, s1: 65, e1: 0 }, { d: 10, back: 1 }],
+  pisaochao: [{ d: 6, t: -6, h1: 95, k1: 100, lift: 6, s1: 120, e1: 40, s2: 100, e2: 40 }, { d: 3, t: 10, h1: 28, k1: 8, h2: -20, k2: 30, s1: 20, e1: 30, s2: 0, e2: 30 }, { d: 4 }, { d: 16, back: 1 }],
 };
+// Ficha-base (preparação, golpe, recuperação) das animações que não têm golpe de mesmo nome.
+const ANIMT = { multichute: [5, 9, 12], socochao: [9, 4, 16], giro2: [8, 10, 16], deslize: [6, 10, 14], joelhada2: [6, 4, 14], garras: [4, 8, 12], palma: [7, 4, 14], investida: [7, 8, 14], voadora2: [5, 12, 12], piao: [6, 16, 14], machadada: [11, 4, 18], martelo2: [9, 4, 16], barrigada: [7, 5, 16], tapa: [3, 6, 10], pisaochao: [9, 4, 16] };
 // Poses de reação e de movimento.
 const LYING = { r: -90, hy: 9, t: 0, h1: 6, k1: 10, h2: -6, k2: 12, s1: 160, e1: 15, s2: 150, e2: 20 };
 const KNEEL = { r: 0, hy: null, t: 30, h1: 92, k1: 92, h2: -30, k2: 120, s1: 40, e1: 90, s2: 20, e2: 100 };
 const CROUCH = { t: 14, h1: 80, k1: 110, h2: -40, k2: 100, s1: 45, e1: 105, s2: 20, e2: 115 };
 const TUCK = { h1: 112, k1: 148, h2: 102, k2: 148, s1: 62, e1: 112, s2: 52, e2: 112, t: 20 };
-// Membro que deixa rastro em cada golpe (f1/f2 pé da frente/de trás, h1/h2 mão da frente/de trás).
-const LIMB = { jab: 'h1', direto: 'h2', forte: 'h1', chute: 'f1', giratorio: 'f1', rasteira: 'f2', gancho: 'h1', voadora: 'f1', martelo: 'h1' };
+// Membro que deixa rastro em cada golpe ou animação (f1/f2 pé da frente/de trás, h1/h2 mão da frente/de trás).
+const LIMB = { jab: 'h1', direto: 'h2', joelhada: 'f1', pesado: 'h1', forte: 'h1', chute: 'f1', giratorio: 'f1', rasteira: 'f2', gancho: 'h1', girosoco: 'h1', mortal: 'f1', voadora: 'f1', martelo: 'h1', pisao: 'f1',
+  multichute: 'f1', socochao: 'h1', giro2: 'f1', deslize: 'f1', joelhada2: 'f1', garras: 'h1', palma: 'h1', investida: 'h1', voadora2: 'f1', piao: 'h1', machadada: 'h1', martelo2: 'h1', tapa: 'h1', pisaochao: 'f1' };
+const animDe = f => { const m = f.mv && MV[f.mv]; return m ? (m.an || f.mv) : null; };
+const limbDe = f => LIMB[animDe(f)];
 const TRAILS = new WeakMap(); let trkNow = null; // rastro: fica fora do lutador (o desenho não mexe na simulação)
 
 function mixPose(a, b, u) {
@@ -875,21 +988,31 @@ function mixPose(a, b, u) {
 function samplePose(base, keys, t) {
   let prev = base, acc = 0;
   for (const k of keys) {
+    if (k.back) prev = Object.assign({}, prev, { r: Math.round(prev.r) % 360 }); // depois de um mortal, não "desgira"
     const nxt = k.back ? Object.assign({}, base) : Object.assign({}, prev, k);
     if (t < acc + k.d) { const u = (t - acc) / k.d; return mixPose(prev, nxt, u * u * (3 - 2 * u)); }
     acc += k.d; prev = nxt;
   }
   return prev;
 }
-const ARMS = p => ({ t: p.t, s1: p.s1, e1: p.e1, s2: p.s2, e2: p.e2 });
+// Tempo da animação: converte os quadros reais do golpe (que mudam por tipo de lutador) para a ficha-base da animação.
+function animT(f) {
+  const m = MV[f.mv], an = m.an || f.mv, t = f.mt;
+  if (m.air) return t;
+  const B = ANIMT[an] || [MV[an].st, MV[an].ac, MV[an].rc], T = temposDe(f, m);
+  if (t <= T[0]) return T[0] ? t / T[0] * B[0] : 0;
+  if (t <= T[0] + T[1]) return B[0] + (T[1] ? (t - T[0]) / T[1] * B[1] : 0);
+  return B[0] + B[1] + (t - T[0] - T[1]) / Math.max(1, T[2]) * B[2];
+}
 
-// Pose do lutador neste quadro, calculada só a partir do estado (nada é guardado).
+// Pose-alvo do lutador neste quadro, calculada só a partir do estado (nada é guardado no lutador).
 function poseOf(f) {
-  const h = f.h, S = STANCE[h.cat] || STANCE.Elemental, g = f.y >= G - .5, sp = Math.abs(f.vx);
+  const h = f.h, S = STANCE[h.cat] || STANCE.Elemental, g = f.y >= (f.gy || G) - .5, sp = Math.abs(f.vx);
   let p = Object.assign({}, POSE0, S);
   { const LK = typeof LOOK != 'undefined' && LOOK[h.n]; if (LK && LK.t) p.t += LK.t; }
+  const guarda = Object.assign({}, p);
   const cb = st == 'end' && WN && f.t === WN.t && f.hp > 0, lose = (st == 'end' && LS === f) || f.hp <= 0;
-  if (lose) return Object.assign(p, { r: -90, hy: 9, t: 0, h1: 6, k1: 10, h2: -6, k2: 12, s1: 160, e1: 15, s2: 150, e2: 20 });
+  if (lose) return Object.assign(p, LYING);
   if (cb) {
     const v = h.vic;
     if (v == 'spin') return Object.assign(p, { sx: Math.cos(vt * .3), lift: Math.abs(Math.sin(vt * .2)) * 12, s1: 165, e1: 15, s2: 150, e2: 20 });
@@ -898,11 +1021,18 @@ function poseOf(f) {
     return Object.assign(p, { lift: Math.abs(j) * 14, t: j * (d ? 12 : 3), s1: 168, e1: 10, s2: d ? 30 : 155, e2: d ? 70 : 15, h1: d ? 45 + j * 25 : 18, k1: d ? 70 : 20 });
   }
   if (f.kd > 0) return f.kd > 8 ? Object.assign(p, LYING) : Object.assign(p, mixPose(Object.assign({}, p, LYING), Object.assign({}, p, KNEEL), (8 - f.kd) / 8));
-  if (f.gu > 10) return Object.assign(p, mixPose(Object.assign({}, p, KNEEL), Object.assign({}, POSE0, S), (20 - f.gu) / 10));
+  if (f.gu > 10) return Object.assign(p, mixPose(Object.assign({}, p, KNEEL), guarda, (20 - f.gu) / 10));
   if (f.lch && f.stun > 0) return Object.assign(p, { r: -(30 - f.stun) * 14, t: -10, h1: 40, k1: 40, h2: 10, k2: 40, s1: 150, e1: 30, s2: 130, e2: 30 });
   if (f.stun > 0) return Object.assign(p, { t: -20, s1: -25, e1: 40, s2: -50, e2: 30, h1: 26, k1: 12, h2: -20, k2: 10 });
   if (f.rl > 0) return Object.assign(p, TUCK, { hy: 15, t: 40, r: (f.vx * f.face > 0 ? 1 : -1) * (22 - f.rl) / 22 * 360 });
-  if (f.mv && ANIM[f.mv]) return samplePose(p, ANIM[f.mv], f.mt);
+  if (f.mv) {
+    const m = MV[f.mv], an = m.an || f.mv;
+    if (ANIM[an]) {
+      const q = samplePose(p, ANIM[an], animT(f));
+      if (an == 'piao') { const T = temposDe(f, m); if (f.mt > T[0] && f.mt <= T[0] + T[1]) q.sx = Math.cos((f.mt - T[0]) * .9); }
+      return q;
+    }
+  }
   if (f.dv) return Object.assign(p, { r: f.vy > 0 ? 45 : -15, t: 10, h1: -10, k1: 10, h2: -30, k2: 20, s1: 125, e1: 0, s2: 115, e2: 0 });
   if (f.dash > 0) return Object.assign(p, { t: 32, h1: 60, k1: 70, h2: -50, k2: 40, s1: 100, e1: 0, s2: -40, e2: 60 });
   if (f.beam > 0) return Object.assign(p, { t: -4, s1: 92, e1: 0, s2: 86, e2: 5 });
@@ -911,15 +1041,48 @@ function poseOf(f) {
   if (f.tq > 0) { const a = f.tq % 8 < 4; return Object.assign(p, { t: 18, s1: a ? 95 : 40, e1: a ? 0 : 100, s2: a ? 20 : 92, e2: a ? 110 : 0 }); }
   // pernas e tronco pelo movimento
   if (!g && f.fl > 0) Object.assign(p, TUCK, { r: -(24 - f.fl) / 24 * 360 });
-  else if (!g) Object.assign(p, { h1: 70, k1: 105, h2: -5, k2: 75, s1: 70, e1: 60, s2: 20, e2: 90 });
+  else if (!g) {
+    // subindo: corpo esticado e braços para cima · descendo: pernas procurando o chão e braços abertos
+    if (f.vy < -3) Object.assign(p, { t: -4, h1: 28, k1: 36, h2: -18, k2: 42, s1: 128, e1: 34, s2: 72, e2: 60 });
+    else Object.assign(p, { t: 8, h1: 55, k1: 72, h2: -8, k2: 56, s1: 100, e1: 20, s2: -35, e2: 35 });
+  }
   else if (f.cr) Object.assign(p, CROUCH, f.bk ? { s1: 75, e1: 120, s2: 65, e2: 128 } : {});
-  else if (sp > .6 && !f.bk) { const w = f.wp; Object.assign(p, { h1: 26 * Math.sin(w), h2: -26 * Math.sin(w), k1: 8 + 34 * Math.max(0, Math.cos(w)), k2: 8 + 34 * Math.max(0, -Math.cos(w)), t: p.t + Math.min(8, sp) }); }
-  else p.lift = 1 + Math.sin(tf * .09 + f.x * .01) * 1.2;
+  else if (sp > .6 && !f.bk) {
+    // passada: pernas alternam, o corpo sobe e desce um pouco, e os braços balançam ao contrário das pernas
+    const w = f.wp, tras = f.vx * f.face < 0, a = tras ? 18 : 26;
+    Object.assign(p, { h1: a * Math.sin(w), h2: -a * Math.sin(w), k1: 8 + 34 * Math.max(0, Math.cos(w)), k2: 8 + 34 * Math.max(0, -Math.cos(w)),
+      t: p.t + (tras ? -5 : Math.min(8, sp)), lift: Math.abs(Math.cos(w)) * 2.2, s1: p.s1 - 8 * Math.sin(w), s2: p.s2 + 8 * Math.sin(w) });
+  }
+  else {
+    // parado: respiração; o velocista fica saltitando como um boxeador
+    const b = Math.sin(tf * .09 + f.x * .01);
+    p.lift = h.cat == 'Velocista' ? Math.abs(Math.sin(tf * .16 + f.x * .01)) * 2.6 : 1 + b * 1.2;
+    p.s1 += b * 3; p.s2 -= b * 2; p.t += Math.sin(tf * .045 + f.x * .01);
+    if (h.cat == 'Mágico') p.e1 += Math.sin(tf * .07) * 8;
+  }
   // braços pela ação
-  if (f.at > 0) Object.assign(p, ARMS(samplePose(p, ANIM.soco, 18 - f.at)));
-  else if (f.sa > 0) Object.assign(p, { t: -6, s1: 100, e1: 12, s2: 80, e2: 30 });
+  if (f.sa > 0) Object.assign(p, { t: -6, s1: 100, e1: 12, s2: 80, e2: 30 });
   if (f.bk && !f.cr) Object.assign(p, { t: -2, s1: 70, e1: 120, s2: 60, e2: 130 });
   return p;
+}
+
+// Suavização (só desenho): a pose desenhada persegue a pose-alvo, para não haver "pulos" entre um movimento e outro.
+// Também amortece a aterrissagem e a virada. Fica num mapa à parte: nada é escrito no lutador.
+const POSES = new WeakMap(), SUAVE = ['t', 'h1', 'k1', 'h2', 'k2', 's1', 'e1', 's2', 'e2', 'lift'];
+function suaviza(f, a) {
+  const m = POSES.get(f), g = f.y >= (f.gy || G) - .5;
+  if (!m || tf < m.tf || tf - m.tf > 8) { POSES.set(f, { p: a, tf, g, face: f.face, la: 0, tu: 0 }); return a; }
+  const dt = tf - m.tf, livre = !f.mv && !f.kd && !f.rl && f.stun <= 0;
+  let la = Math.max(0, m.la - dt), tu = Math.max(0, m.tu - dt);
+  if (g && !m.g && livre) la = 8;               // acabou de pousar
+  if (f.face != m.face && livre) tu = 6;        // acabou de virar
+  if (la > 0 && g && livre) { const u = la / 8; a = Object.assign({}, a, { h1: a.h1 + 30 * u, k1: a.k1 + 55 * u, h2: a.h2 - 12 * u, k2: a.k2 + 50 * u, t: a.t + 10 * u }); }
+  const k = livre ? .32 : .6, w = dt ? 1 - Math.pow(1 - k, dt) : 0, o = Object.assign({}, a);
+  for (const q of SUAVE) o[q] = m.p[q] + (a[q] - m.p[q]) * w;
+  if (a.hy != null && m.p.hy != null) o.hy = m.p.hy + (a.hy - m.p.hy) * w;
+  if (tu > 0) o.sx = a.sx * (1 - .5 * tu / 6);
+  POSES.set(f, { p: o, tf, g, face: f.face, la, tu });
+  return o;
 }
 
 // Desenha o esqueleto já posicionado (espaço do corpo: x para frente, y para baixo, pés em y=0), vestido com a roupa (vg-roupas).
@@ -961,7 +1124,7 @@ function drawRig(f, p, R, wd, C, sp) {
     if (O.gk == 'garra') { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.beginPath(); for (const d of [-3, 0, 3]) { ctx.moveTo(A[1][0] + 3, A[1][1] + d); ctx.lineTo(A[1][0] + 8, A[1][1] + d * 1.4); } ctx.stroke(); }
   };
   const L1 = leg(p.h1, p.k1), L2 = leg(p.h2, p.k2), A1 = arm(p.s1, p.e1), A2 = arm(p.s2, p.e2);
-  if (trkNow) { const q = { f1: L1[1], f2: L2[1], h1: A1[1], h2: A2[1] }[LIMB[f.mv]], M = ctx.getTransform(); if (q) trkNow.push(M.transformPoint(new DOMPoint(q[0], q[1]))); }
+  if (trkNow) { const q = { f1: L1[1], f2: L2[1], h1: A1[1], h2: A2[1] }[limbDe(f)], M = ctx.getTransform(); if (q) trkNow.push(M.transformPoint(new DOMPoint(q[0], q[1]))); }
   // 1) peças de trás
   ctx.save(); ctx.rotate(p.t * DG); roupaAtras(O, C, SW, HW, TO, R.th + R.sh, sp, f); ctx.restore();
   // 2) braço e perna de trás
@@ -971,6 +1134,7 @@ function drawRig(f, p, R, wd, C, sp) {
   const torso = () => { ctx.beginPath(); ctx.moveTo(-HW, 3); ctx.lineTo(HW, 3); ctx.lineTo(SW, -TO + 4); ctx.quadraticCurveTo(SW, -TO - 2, SW - 6, -TO - 2); ctx.lineTo(-SW + 6, -TO - 2); ctx.quadraticCurveTo(-SW, -TO - 2, -SW, -TO + 4); ctx.closePath(); };
   ctx.fillStyle = C.s; torso(); ctx.fill();
   if (O.pt && O.pt != 'liso' && O.pt != 'camiseta') { ctx.save(); torso(); ctx.clip(); padrao(O.pt, C, SW, HW, TO); ctx.restore(); }
+  ctx.save(); torso(); ctx.clip(); ctx.fillStyle = 'rgba(0,0,0,.17)'; ctx.fillRect(-SW - 4, -TO - 4, SW * .75, TO + 10); ctx.fillStyle = 'rgba(255,255,255,.14)'; ctx.fillRect(SW * .42, -TO - 4, 3.5, TO + 10); ctx.restore();
   ctx.strokeStyle = '#111'; ctx.lineWidth = 3; torso(); ctx.stroke();
   barriga(O, C, HW, TO);
   ctx.fillStyle = C.a; ctx.fillRect(-HW - .5, -9, HW * 2 + 1, 6); ctx.strokeRect(-HW - .5, -9, HW * 2 + 1, 6);
@@ -1028,9 +1192,9 @@ function body(f, gh) {
   const h = f.h, z = f.z, R = RIG[h.cat] || RIG.Elemental, wd = h.wd || 1, B = f.buff > 0, sp = Math.abs(f.vx), gy = f.gy || G;
   // rastro do golpe (só no desenho principal, nunca nos fantasmas): pontos guardados fora da simulação
   if (!gh) {
-    const m = f.mv && MV[f.mv], ativo = m && LIMB[f.mv] && f.mt > m.st - 1 && f.mt <= m.st + Math.min(m.ac, 8) + 2;
+    const m = f.mv && MV[f.mv], T = m && temposDe(f, m), ativo = m && limbDe(f) && f.mt > T[0] - 1 && f.mt <= T[0] + Math.min(T[1], 10) + 2;
     let tr = TRAILS.get(f) || []; if (!ativo) tr = tr.slice(1);
-    if (tr.length > 1) { ctx.save(); ctx.lineCap = 'round'; for (let n = 1; n < tr.length; n++) { ctx.globalAlpha = n / tr.length * .7; ctx.strokeStyle = n % 2 ? '#fff' : f.h.a; ctx.lineWidth = 4 + n * 2.2; ctx.beginPath(); ctx.moveTo(tr[n - 1].x, tr[n - 1].y); ctx.lineTo(tr[n].x, tr[n].y); ctx.stroke(); } ctx.restore(); }
+    if (tr.length > 1) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); const qz = window.NITIDEZ || 1; ctx.lineCap = 'round'; for (let n = 1; n < tr.length; n++) { ctx.globalAlpha = n / tr.length * .7; ctx.strokeStyle = n % 2 ? '#fff' : f.h.a; ctx.lineWidth = (4 + n * 2.2) * qz; ctx.beginPath(); ctx.moveTo(tr[n - 1].x, tr[n - 1].y); ctx.lineTo(tr[n].x, tr[n].y); ctx.stroke(); } ctx.restore(); }
     trkNow = ativo ? tr : null; TRAILS.set(f, tr);
   }
   ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.face * z, z);
@@ -1038,7 +1202,7 @@ function body(f, gh) {
   else ctx.globalAlpha = gh;
   if (f.iv > 0) ctx.globalAlpha = (mp && !net) ? .3 : (f === VW() ? .45 : (f.at > 0 || f.sa > 0 || f.stun > 0 ? .55 : .07));
   if (f.sa > 0 || B) { const ga = ctx.globalAlpha; ctx.globalAlpha = ga * .4; ctx.fillStyle = f.ac2; ctx.beginPath(); ctx.ellipse(0, -58, 48 * wd, 78, 0, 0, 7); ctx.fill(); ctx.globalAlpha = ga; }
-  drawRig(f, poseOf(f), R, wd, colorsOf(f), sp);
+  drawRig(f, gh ? poseOf(f) : suaviza(f, poseOf(f)), R, wd, colorsOf(f), sp);
   if (trkNow) { while (trkNow.length > 7) trkNow.shift(); trkNow = null; }
 
 
@@ -1256,6 +1420,340 @@ function barriga(O, C, HW, TO) {
 // Cards: a roupa do retrato usa as cores novas (o rosto não muda).
 function corCard(h) { const O = LOOK[h.n]; return O ? [O.s, O.a] : [h.c, h.a]; }
 document.querySelectorAll('#grid .card').forEach(b => { const i = +b.dataset.i, el = b.querySelector('.art'); if (el && H[i]) el.innerHTML = art(H[i], i); });
+</script>
+<script id="vg-cenario">
+// ================= CENÁRIOS COM HORA DO DIA + NITIDEZ + EFEITOS DE HQ =================
+// Só desenho: lê tf/stg/shake e nunca altera a simulação.
+
+// ---- Hora do dia: o céu passa por amanhecer, manhã, tarde, pôr do sol, crepúsculo, noite e madrugada ----
+const CICLO = 4200; // quadros de um dia inteiro (70 segundos): numa luta dá para ver o dia virar noite
+// t0 = hora em que o cenário começa (0 amanhecer · .3 tarde · .46 pôr do sol · .68 noite) · mix = quanto o horário domina a cor do céu
+// fix = lugar sem céu (as cores mudam de outro jeito) · nublado = sem sol nem lua
+const CEN = {
+  'Cidade à noite': { t0: .66 }, 'Floresta mágica': { t0: .02 }, 'Deserto ao pôr do sol': { t0: .40 }, 'Montanhas de gelo': { t0: .60, mix: .55 },
+  'Vulcão em erupção': { t0: .52, mix: .45 }, 'Estação espacial': { fix: 1 }, 'Cidade neon sob chuva': { t0: .64, mix: .5, nublado: 1 },
+  'Praia ao entardecer': { t0: .38 }, 'Castelo na colina': { t0: .14 }, 'Coliseu': { t0: .22 }, 'Caverna de cristais': { fix: 1 }, 'Ponte sobre o rio': { t0: .05 },
+};
+const hex3 = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
+// [hora, cor do alto do céu, cor do horizonte, luz sobre o cenário (r,g,b,força), estrelas]
+const CEU = [
+  [0, '#5b7fd6', '#ffc48a', [255, 170, 90, .10], .15],
+  [.12, '#58b6ff', '#d9f1ff', [255, 255, 255, 0], 0],
+  [.32, '#2f8fe8', '#bfe6ff', [255, 255, 255, 0], 0],
+  [.46, '#4a3a8a', '#ff9a56', [255, 120, 40, .16], .05],
+  [.56, '#241b5a', '#b0508a', [60, 30, 110, .28], .5],
+  [.68, '#050a24', '#162457', [10, 20, 70, .42], 1],
+  [.90, '#0a1030', '#2a2f6a', [10, 20, 70, .38], .9],
+  [1, '#5b7fd6', '#ffc48a', [255, 170, 90, .10], .15],
+].map(k => [k[0], hex3(k[1]), hex3(k[2]), k[3], k[4]]);
+const mixN = (a, b, u) => a.map((x, i) => x + (b[i] - x) * u);
+const rgb = c => 'rgb(' + (c[0] | 0) + ',' + (c[1] | 0) + ',' + (c[2] | 0) + ')';
+function ceuEm(t) {
+  let i = 1; while (i < CEU.length - 1 && t > CEU[i][0]) i++;
+  const A = CEU[i - 1], B = CEU[i], u = (t - A[0]) / (B[0] - A[0]);
+  return { top: mixN(A[1], B[1], u), bot: mixN(A[2], B[2], u), luz: mixN(A[3], B[3], u), est: A[4] + (B[4] - A[4]) * u };
+}
+const horaDoDia = () => { const c = CEN[STG[stg].n] || {}; return ((c.t0 || 0) + tf / CICLO) % 1; };
+const NOME_HORA = t => t < .1 ? 'amanhecer' : t < .3 ? 'manhã' : t < .42 ? 'tarde' : t < .54 ? 'pôr do sol' : t < .64 ? 'anoitecer' : t < .92 ? 'noite' : 'madrugada';
+
+function bg() {
+  const s = STG[stg], c = CEN[s.n] || {}, X = ctx;
+  if (c.fix) { // espaço e caverna: sem sol; as cores do lugar vão girando devagar
+    const g = X.createLinearGradient(0, 0, 0, 400); g.addColorStop(0, s.s[0]); g.addColorStop(1, s.s[1]); X.fillStyle = g; X.fillRect(0, 0, W, 400);
+    X.fillStyle = 'hsla(' + ((tf * .25) % 360) + ',75%,55%,.13)'; X.fillRect(0, 0, W, 400);
+    s.d(); X.fillStyle = s.g; X.fillRect(0, G, W, 70);
+    X.fillStyle = 'hsla(' + ((tf * .25 + 120) % 360) + ',80%,60%,.08)'; X.fillRect(0, 0, W, 400);
+    if (s.f) s.f(); return;
+  }
+  const t = horaDoDia(), k = ceuEm(t), m = c.mix == null ? .7 : c.mix;
+  X.clearRect(0, 0, W, 400);
+  // 1) cenário e chão; depois a luz do horário cai só sobre o que já foi pintado
+  s.d(); X.fillStyle = s.g; X.fillRect(0, G, W, 70);
+  if (k.luz[3] > .005) { X.globalCompositeOperation = 'source-atop'; X.fillStyle = 'rgba(' + (k.luz[0] | 0) + ',' + (k.luz[1] | 0) + ',' + (k.luz[2] | 0) + ',' + k.luz[3].toFixed(3) + ')'; X.fillRect(0, 0, W, 400); }
+  // 2) por trás de tudo, da frente para o fundo: nuvens, sol e lua, estrelas, céu
+  X.globalCompositeOperation = 'destination-over';
+  nuvens(k, c.nublado); if (!c.nublado) astros(t); estrelas(k.est * (c.nublado ? .3 : 1));
+  const g = X.createLinearGradient(0, 0, 0, G);
+  g.addColorStop(0, rgb(mixN(hex3(s.s[0]), k.top, m))); g.addColorStop(1, rgb(mixN(hex3(s.s[1]), k.bot, m)));
+  X.fillStyle = g; X.fillRect(0, 0, W, 400);
+  X.globalCompositeOperation = 'source-over';
+  if (s.f) s.f();
+}
+function astros(t) {
+  const X = ctx, arco = u => [80 + u * (W - 160), G - 40 - Math.sin(u * Math.PI) * 250];
+  if (t < .53 || t > .97) { // sol: nasce à esquerda, passa pelo alto e se põe à direita
+    const u = (t > .9 ? t - 1 : t) / .5, [x, y] = arco(u), alto = Math.max(0, Math.sin(u * Math.PI));
+    X.fillStyle = rgb(mixN([255, 150, 80], [255, 246, 190], alto)); X.beginPath(); X.arc(x, y, 30, 0, 7); X.fill();
+    X.globalAlpha = .22; X.beginPath(); X.arc(x, y, 52, 0, 7); X.fill(); X.globalAlpha = .1; X.beginPath(); X.arc(x, y, 80, 0, 7); X.fill(); X.globalAlpha = 1;
+  }
+  if (t > .52) { // lua
+    const u = (t - .54) / .44, [x, y] = arco(u);
+    X.fillStyle = '#d8c79a'; for (const [dx, dy, r] of [[-8, -6, 5], [7, 4, 4], [-3, 9, 3]]) { X.beginPath(); X.arc(x + dx, y + dy, r, 0, 7); X.fill(); }
+    X.fillStyle = '#f4e9c4'; X.beginPath(); X.arc(x, y, 24, 0, 7); X.fill();
+    X.globalAlpha = .14; X.beginPath(); X.arc(x, y, 44, 0, 7); X.fill(); X.globalAlpha = 1;
+  }
+}
+function estrelas(a) {
+  if (a < .03) return;
+  const X = ctx; X.fillStyle = '#fff';
+  for (let i = 0; i < 56; i++) { X.globalAlpha = a * (.45 + .55 * Math.abs(Math.sin(tf * .04 + i * 1.7))); const s = i % 7 ? 2 : 3; X.fillRect((i * 131) % W, (i * 71) % 240, s, s); }
+  X.globalAlpha = 1;
+}
+function nuvens(k, nublado) {
+  const X = ctx, cor = mixN([255, 255, 255], k.bot, .3 + k.est * .45), n = nublado ? 7 : 4;
+  X.fillStyle = rgb(cor); X.globalAlpha = (nublado ? .55 : .8) - k.est * .45;
+  for (let i = 0; i < n; i++) {
+    const x = ((i * 290 + tf * (.12 + i * .045)) % (W + 320)) - 160, y = 46 + (i * 53) % 110, e = 1 + (i % 3) * .25;
+    X.beginPath(); X.ellipse(x, y, 54 * e, 15 * e, 0, 0, 7); X.ellipse(x - 34 * e, y + 6, 32 * e, 11 * e, 0, 0, 7); X.ellipse(x + 30 * e, y + 5, 36 * e, 12 * e, 0, 0, 7); X.ellipse(x + 4 * e, y - 10 * e, 30 * e, 13 * e, 0, 0, 7); X.fill();
+  }
+  X.globalAlpha = 1;
+}
+
+// ---- Nitidez: o canvas é desenhado com mais pontos em telas de alta resolução (iPad), sem mudar a simulação ----
+var NITIDEZ = 1;          // quantos pontos reais por ponto do jogo (1 a 2)
+let nitMax = 2, tDraw = 0, lentos = 0, nQuadro = 0, fpsT = 0, fpsN = 0, fpsV = 0;
+const MEDIR = /[?&]medir/.test(location.search); // index.html?medir mostra quadros por segundo e tempo de desenho
+function ajustaNitidez() {
+  const wCss = cv.clientWidth || 1000, dpr = window.devicePixelRatio || 1;
+  const q = Math.max(1, Math.min(nitMax, Math.round(wCss * dpr / 1000 * 4) / 4));
+  if (q != NITIDEZ || cv.width != 1000 * q) { NITIDEZ = q; cv.width = 1000 * q; cv.height = 400 * q; }
+}
+const draw0 = draw;
+draw = function () {
+  if (!P) return;
+  if ((nQuadro++ & 31) == 0 || cv.width != 1000 * NITIDEZ) ajustaNitidez();
+  ctx.setTransform(NITIDEZ, 0, 0, NITIDEZ, 0, 0);
+  const t0 = performance.now();
+  draw0(); efeitosHQ();
+  const ms = performance.now() - t0;
+  tDraw += (ms - tDraw) * .05;
+  // se o aparelho não estiver dando conta, baixa a nitidez um degrau (melhor fluido que bonito)
+  if (tDraw > 11 && NITIDEZ > 1) { if (++lentos > 90) { nitMax = Math.max(1, NITIDEZ - .5); lentos = 0; ajustaNitidez(); } } else lentos = 0;
+  if (MEDIR) {
+    fpsN++; const agora = performance.now(); if (agora - fpsT > 500) { fpsV = fpsN * 1000 / (agora - fpsT); fpsN = 0; fpsT = agora; }
+    ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(4, 372, 330, 24); ctx.fillStyle = '#7dff9a'; ctx.font = '14px monospace'; ctx.textAlign = 'left';
+    ctx.fillText(fpsV.toFixed(0) + ' qps · desenho ' + tDraw.toFixed(1) + ' ms · nitidez ' + NITIDEZ + 'x · ' + NOME_HORA(horaDoDia()), 10, 389);
+  }
+  if (window.somObserva) somObserva();
+};
+
+// ---- Efeitos de HQ: linhas de impacto nos golpes fortes e clarão no nocaute ----
+function efeitosHQ() {
+  const X = ctx;
+  if (shake > 7 && st == 'fight') {
+    X.save(); X.globalAlpha = Math.min(.45, (shake - 7) / 16); X.fillStyle = '#fff';
+    for (let i = 0; i < 20; i++) {
+      const a = i / 20 * Math.PI * 2 + (tf % 2) * .16, r0 = 300 + (i * 53) % 120, c = Math.cos(a), s = Math.sin(a);
+      X.beginPath(); X.moveTo(500 + c * r0, 200 + s * r0 * .42); X.lineTo(500 + Math.cos(a - .035) * 800, 200 + Math.sin(a - .035) * 800 * .42); X.lineTo(500 + Math.cos(a + .035) * 800, 200 + Math.sin(a + .035) * 800 * .42); X.closePath(); X.fill();
+    }
+    X.restore();
+  }
+  if (st == 'end' && vt < 12) { X.fillStyle = 'rgba(255,255,255,' + ((12 - vt) / 12 * .55).toFixed(3) + ')'; X.fillRect(0, 0, W, 400); }
+}
+</script>
+<script id="vg-som">
+// ================= SONS E MÚSICA (Etapa 5) =================
+// Tudo é gerado pelo próprio jogo (Web Audio), sem arquivos. Estilo brinquedo / desenho animado.
+// O som só OBSERVA a luta (nunca altera a simulação) e pode usar Math.random à vontade.
+const SOM = { ac: null, sfx: null, mus: null, on: true, musica: null, n: 0 };
+try { SOM.on = localStorage.getItem('vg-som') != '0'; } catch (e) {}
+
+// ---- peças básicas ----
+// tom: oscilador com varredura de frequência. o = {tipo, f:[de,para], d:duração, v:volume, a:ataque, vib:[hz,quanto], lp:filtro}
+function tom(ac, dest, t, o) {
+  const osc = ac.createOscillator(), g = ac.createGain();
+  osc.type = o.tipo || 'sine';
+  osc.frequency.setValueAtTime(o.f[0], t);
+  if (o.f[1] != null) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.f[1]), t + o.d);
+  if (o.vib) { const l = ac.createOscillator(), lg = ac.createGain(); l.frequency.value = o.vib[0]; lg.gain.value = o.vib[1]; l.connect(lg); lg.connect(osc.frequency); l.start(t); l.stop(t + o.d + .05); }
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.v, t + (o.a || .006)); g.gain.exponentialRampToValueAtTime(.0001, t + o.d);
+  let n = osc;
+  if (o.lp) { const fl = ac.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = o.lp; osc.connect(fl); n = fl; }
+  n.connect(g); g.connect(dest); osc.start(t); osc.stop(t + o.d + .05);
+  return osc;
+}
+// ruido: chiado filtrado (vento, golpe no ar, impacto). o = {d, v, tipo:'bandpass'|'lowpass'|'highpass', f:[de,para], q}
+const RUIDO = new WeakMap();
+function ruido(ac, dest, t, o) {
+  let buf = RUIDO.get(ac);
+  if (!buf) { buf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const ch = buf.getChannelData(0); for (let i = 0; i < ch.length; i++) ch[i] = Math.random() * 2 - 1; RUIDO.set(ac, buf); }
+  const src = ac.createBufferSource(), fl = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = buf; src.loop = true; fl.type = o.tipo || 'bandpass'; fl.Q.value = o.q || 1;
+  fl.frequency.setValueAtTime(o.f[0], t); if (o.f[1] != null) fl.frequency.exponentialRampToValueAtTime(o.f[1], t + o.d);
+  const v = (o.tipo || 'bandpass') == 'bandpass' ? o.v * 4 : o.v; // o filtro de faixa come muito volume
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(v, t + (o.a || .004)); g.gain.exponentialRampToValueAtTime(.0001, t + o.d);
+  src.connect(fl); fl.connect(g); g.connect(dest); src.start(t, Math.random() * .8); src.stop(t + o.d + .03);
+  return src;
+}
+
+// ---- catálogo de sons: SONS.nome(ac, destino, quando, p = tom mais agudo/grave, x = extra) ----
+const SONS = {
+  pulo: (ac, d, t, p) => tom(ac, d, t, { f: [190 * p, 560 * p], d: .2, v: .22, vib: [30, 45] }),                    // "boing" de mola
+  pirueta: (ac, d, t, p) => tom(ac, d, t, { f: [480 * p, 1500 * p], d: .3, v: .13 }),                                // assobio subindo
+  pouso: (ac, d, t) => tom(ac, d, t, { f: [140, 70], d: .07, v: .14 }),
+  soco_ar: (ac, d, t, p) => ruido(ac, d, t, { f: [950 * p, 320 * p], d: .09, v: .13 }),
+  chute_ar: (ac, d, t, p) => ruido(ac, d, t, { f: [550 * p, 1900 * p], d: .14, v: .15 }),
+  giro_ar: (ac, d, t, p) => { ruido(ac, d, t, { f: [380 * p, 2500 * p], d: .28, v: .16, q: 2 }); tom(ac, d, t, { f: [300 * p, 900 * p], d: .26, v: .05 }); },
+  baixo_ar: (ac, d, t) => ruido(ac, d, t, { tipo: 'highpass', f: [2600, 900], d: .22, v: .11 }),                     // "zzzip" raspando
+  rolar: (ac, d, t) => ruido(ac, d, t, { f: [450, 1300], d: .24, v: .09, q: .8 }),
+  pingo: (ac, d, t) => tom(ac, d, t, { f: [900, 500], d: .05, v: .06 }),
+  hit_leve: (ac, d, t, p) => { tom(ac, d, t, { tipo: 'triangle', f: [520 * p, 180 * p], d: .07, v: .3 }); tom(ac, d, t + .01, { f: [1250 * p, 1900 * p], d: .05, v: .07 }); }, // "tuc" + guincho de brinquedo
+  hit_medio: (ac, d, t, p) => { tom(ac, d, t, { tipo: 'square', lp: 900, f: [300 * p, 90 * p], d: .11, v: .26 }); ruido(ac, d, t, { tipo: 'lowpass', f: [1800, 400], d: .08, v: .2 }); },
+  hit_forte: (ac, d, t, p) => { tom(ac, d, t, { f: [165 * p, 45], d: .24, v: .5 }); ruido(ac, d, t, { tipo: 'lowpass', f: [3000, 300], d: .16, v: .32 }); tom(ac, d, t, { tipo: 'square', lp: 1500, f: [700 * p, 200 * p], d: .06, v: .1 }); }, // "POW"
+  defesa: (ac, d, t) => { tom(ac, d, t, { tipo: 'triangle', f: [1800, 1750], d: .12, v: .15 }); tom(ac, d, t, { f: [2700, 2650], d: .18, v: .07 }); },   // "plim"
+  quebra: (ac, d, t) => { for (let i = 0; i < 7; i++) tom(ac, d, t + i * .022, { f: [1500 + Math.random() * 2600, 900], d: .12, v: .09 }); ruido(ac, d, t, { tipo: 'highpass', f: [5000, 2500], d: .22, v: .14 }); },
+  queda: (ac, d, t) => tom(ac, d, t, { f: [950, 190], d: .36, v: .12 }),                                             // apito descendo
+  plof: (ac, d, t) => { tom(ac, d, t, { f: [125, 48], d: .15, v: .4 }); ruido(ac, d, t, { tipo: 'lowpass', f: [520, 150], d: .1, v: .2 }); },
+  combo: (ac, d, t, p, n) => { const f = 620 * Math.pow(2, Math.min(n || 3, 12) / 12); tom(ac, d, t, { tipo: 'triangle', f: [f, f], d: .08, v: .15 }); tom(ac, d, t + .06, { tipo: 'triangle', f: [f * 1.5, f * 1.5], d: .1, v: .12 }); },
+  item: (ac, d, t) => [660, 880, 1320].forEach((f, i) => tom(ac, d, t + i * .07, { tipo: 'triangle', f: [f, f], d: .12, v: .16 })),
+  ko: (ac, d, t) => { tom(ac, d, t, { tipo: 'triangle', f: [230, 105], d: .2, v: .5 }); tom(ac, d, t + .02, { f: [1760, 1750], d: .9, v: .16 }); tom(ac, d, t + .02, { f: [2640, 2630], d: .7, v: .07 }); }, // "BONK" + sino
+  gongo: (ac, d, t) => { tom(ac, d, t, { f: [196, 190], d: 1.1, v: .28 }); tom(ac, d, t, { f: [294, 290], d: .9, v: .12 }); tom(ac, d, t, { f: [523, 520], d: .5, v: .06 }); ruido(ac, d, t, { tipo: 'highpass', f: [4000, 2500], d: .25, v: .05 }); },
+  vitoria: (ac, d, t) => { [523, 659, 784, 1047].forEach((f, i) => tom(ac, d, t + i * .11, { tipo: 'square', lp: 2400, f: [f, f], d: .14, v: .16 })); [523, 659, 784, 1047].forEach(f => tom(ac, d, t + .46, { tipo: 'triangle', f: [f, f], d: .7, v: .1 })); },
+  derrota: (ac, d, t) => [233, 220, 208, 196].forEach((f, i) => tom(ac, d, t + i * .34, { tipo: 'sawtooth', lp: 700, f: [f, f * (i == 3 ? .8 : .97)], d: i == 3 ? .8 : .32, v: .17, vib: [6, 4] })), // trombone triste
+  menu: (ac, d, t) => tom(ac, d, t, { f: [480, 920], d: .07, v: .11 }),                                              // "bloop"
+  // especiais, um som por jeito do poder
+  esp_fogo: (ac, d, t) => { ruido(ac, d, t, { tipo: 'lowpass', f: [300, 2600], d: .5, v: .28, a: .08 }); tom(ac, d, t, { tipo: 'sawtooth', lp: 500, f: [90, 210], d: .45, v: .14 }); },
+  esp_gelo: (ac, d, t) => [3300, 2900, 3700, 2500, 3100].forEach((f, i) => tom(ac, d, t + i * .05, { f: [f, f * .96], d: .22, v: .08 })),
+  esp_vento: (ac, d, t) => ruido(ac, d, t, { f: [300, 1700], d: .65, v: .26, q: .7, a: .15 }),
+  esp_agua: (ac, d, t) => [0, .09, .2].forEach((dt, i) => tom(ac, d, t + dt, { f: [280 + i * 90, 700 + i * 140], d: .1, v: .2 })),  // "blub blub"
+  esp_terra: (ac, d, t) => { tom(ac, d, t, { f: [75, 38], d: .55, v: .5 }); ruido(ac, d, t, { tipo: 'lowpass', f: [420, 120], d: .45, v: .3 }); },
+  esp_magia: (ac, d, t) => { [880, 1175, 1568, 2093].forEach((f, i) => tom(ac, d, t + i * .06, { f: [f, f], d: .25, v: .1 })); ruido(ac, d, t, { tipo: 'highpass', f: [7000, 9000], d: .4, v: .04 }); },
+  esp_golpe: (ac, d, t) => { tom(ac, d, t, { tipo: 'square', lp: 2200, f: [220, 1300], d: .22, v: .14 }); ruido(ac, d, t, { f: [600, 3000], d: .2, v: .14 }); },
+  esp_tempo: (ac, d, t) => [0, .12, .24, .36].forEach((dt, i) => tom(ac, d, t + dt, { f: [1400 - i * 260, 700 - i * 130], d: .3, v: .1 })), // relógio desacelerando
+};
+const JEITO = { proj: 'fogo', inferno: 'fogo', meteor: 'fogo', bomb: 'fogo', cluster: 'fogo', ice: 'gelo', tornado: 'vento', gust: 'vento', bubble: 'agua', poison: 'agua', wave: 'terra', pillars: 'terra', eat: 'terra', stomp: 'terra', time: 'tempo',
+  pull: 'magia', beam: 'magia', shield: 'magia', heal: 'magia', hallu: 'magia', barrier: 'magia', bats: 'magia', steal: 'magia', drain: 'magia', gravity: 'magia', summon: 'magia', blind: 'magia', boss: 'magia' };
+
+// ---- Música da super do Wulkan: composição ORIGINAL de 10 segundos (sintetizador, clima anos 80) ----
+// 96 batidas por minuto, 4 compassos: Lá maior, Fá# menor, Ré maior, Mi maior e final em Lá.
+function musicaWulkan(ac, dest, t0) {
+  const B = .625, E = B / 2, nos = [], N = (x) => (nos.push(x), x);
+  const g = ac.createGain(); g.connect(dest); g.gain.setValueAtTime(.9, t0); g.gain.setValueAtTime(.9, t0 + 9.5); g.gain.linearRampToValueAtTime(.0001, t0 + 10.2);
+  // bateria eletrônica
+  for (let b = 0; b < 16; b++) {
+    const t = t0 + b * B;
+    if (b % 2 == 0) N(tom(ac, g, t, { f: [150, 45], d: .2, v: .7 }));                                   // bumbo
+    else { N(ruido(ac, g, t, { f: [1900, 1500], d: .14, v: .08, q: .7 })); N(tom(ac, g, t, { f: [210, 150], d: .09, v: .2 })); }  // caixa
+    if (b % 4 == 3) N(tom(ac, g, t + E, { f: [150, 45], d: .16, v: .5 }));
+    for (let h = 0; h < 2; h++) N(ruido(ac, g, t + h * E, { tipo: 'highpass', f: [7500, 7000], d: .04, v: h ? .06 : .09 }));  // chimbal
+  }
+  // baixo em colcheias e acordes de fundo
+  const comp = [[110, [220, 277.18, 329.63]], [92.5, [185, 220, 277.18]], [73.42, [293.66, 369.99, 440]], [82.41, [329.63, 415.3, 493.88]]];
+  comp.forEach(([bx, ac3], c) => {
+    for (let e = 0; e < 8; e++) {
+      const fim = c == 3 && e >= 4, f = (fim ? 110 : bx) * (e % 4 == 2 ? 2 : 1);
+      N(tom(ac, g, t0 + c * 4 * B + e * E, { tipo: 'square', lp: 520, f: [f, f], d: .24, v: .2 }));
+    }
+    ac3.forEach(f => N(tom(ac, g, t0 + c * 4 * B, { tipo: 'sawtooth', lp: 1100, f: [f, f], d: c == 3 ? 2 * B : 4 * B - .05, v: .05, a: .08 })));
+  });
+  [220, 277.18, 329.63, 440].forEach(f => N(tom(ac, g, t0 + 14 * B, { tipo: 'sawtooth', lp: 1300, f: [f, f], d: 2 * B, v: .06, a: .05 })));
+  // melodia (colcheias: [nota, quantas colcheias dura])
+  const C5 = 554.37, D5 = 587.33, E5 = 659.25, F5 = 739.99, G5 = 830.61, A5 = 880, B5 = 987.77, C6 = 1108.73, D6 = 1174.66, E6 = 1318.51;
+  const mel = [[E5, 2], [C5, 1], [E5, 1], [A5, 2], [E5, 2], [F5, 2], [C5, 1], [F5, 1], [A5, 2], [G5, 1], [F5, 1], [D5, 1], [F5, 1], [A5, 1], [D6, 1], [C6, 1], [A5, 1], [F5, 1], [A5, 1], [E5, 1], [G5, 1], [B5, 1], [E6, 1], [A5, 4]];
+  let e = 0;
+  for (const [f, n] of mel) {
+    const t = t0 + e * E, d = n * E - .03;
+    N(tom(ac, g, t, { tipo: 'sawtooth', lp: 2600, f: [f, f], d, v: .13, vib: [5.5, 5] })); N(tom(ac, g, t, { tipo: 'square', lp: 1800, f: [f / 2, f / 2], d, v: .05 }));
+    e += n;
+  }
+  return { g, nos, fim: t0 + 10.3 };
+}
+
+// ---- ligar, desligar e tocar ----
+function somLiga() { // precisa nascer de um toque ou tecla (regra dos navegadores, principalmente iPhone/iPad)
+  if (!SOM.ac) {
+    const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+    try {
+      const ac = SOM.ac = new AC(), out = ac.createGain(), comp = ac.createDynamicsCompressor();
+      out.gain.value = 1.2; out.connect(comp); comp.connect(ac.destination);
+      SOM.sfx = ac.createGain(); SOM.sfx.connect(out); SOM.mus = ac.createGain(); SOM.mus.gain.value = .55; SOM.mus.connect(out);
+    } catch (e) { SOM.ac = null; return; }
+  }
+  if (SOM.ac.state == 'suspended' && !(paused && !net) && !document.hidden) SOM.ac.resume();
+}
+const somOk = () => SOM.on && SOM.ac && SOM.ac.state == 'running';
+function toca(nome, p, x) {
+  if (!somOk() || SOM.n > 5 || !SONS[nome]) return; // no máximo 6 sons novos por quadro
+  SOM.n++;
+  try { SONS[nome](SOM.ac, SOM.sfx, SOM.ac.currentTime + .004, p || 1, x); } catch (e) {}
+}
+function musicaPara() {
+  const m = SOM.musica; if (!m) return; SOM.musica = null;
+  try { const t = SOM.ac.currentTime; m.g.gain.cancelScheduledValues(t); m.g.gain.setValueAtTime(m.g.gain.value, t); m.g.gain.linearRampToValueAtTime(.0001, t + .25); m.nos.forEach(n => { try { n.stop(t + .3); } catch (e) {} }); SOM.sfx.gain.setTargetAtTime(1, t, .2); } catch (e) {}
+}
+function musicaToca() {
+  if (!somOk()) return; musicaPara();
+  const t = SOM.ac.currentTime + .03; SOM.musica = musicaWulkan(SOM.ac, SOM.mus, t);
+  SOM.sfx.gain.setTargetAtTime(.45, t, .1); SOM.sfx.gain.setTargetAtTime(1, t + 10, .3); // os outros sons ficam mais baixos durante a música
+}
+function somBotao() {
+  SOM.on = !SOM.on; try { localStorage.setItem('vg-som', SOM.on ? '1' : '0'); } catch (e) {}
+  if (!SOM.on) musicaPara(); else { somLiga(); toca('menu'); }
+  document.querySelectorAll('.somb').forEach(b => { b.textContent = SOM.on ? '🔊 Som ligado' : '🔇 Som desligado'; });
+}
+
+// ---- observador: compara a luta com o quadro anterior e toca o som de cada acontecimento ----
+const OUV = new WeakMap(); let ouvSt = 'sel', ouvMt = 0;
+const TOMCAT = { Tanque: .78, Velocista: 1.22, 'Mágico': 1.08, Elemental: 1 };
+function somObserva() {
+  SOM.n = 0;
+  if (SOM.ac) { // pausa e aba escondida calam tudo
+    const parar = (paused && !net) || document.hidden;
+    if (parar && SOM.ac.state == 'running') SOM.ac.suspend(); else if (!parar && SOM.ac.state == 'suspended' && SOM.on) SOM.ac.resume();
+    if (SOM.musica && (st != 'fight' || SOM.ac.currentTime > SOM.musica.fim)) musicaPara();
+  }
+  if (st == 'fight' && mt > ouvMt + 10) toca('gongo');
+  if (st == 'end' && ouvSt == 'fight') { const eu = VW(); toca(WN && eu && WN.t === eu.t ? 'vitoria' : 'derrota'); }
+  ouvSt = st; ouvMt = mt;
+  for (const f of fs()) {
+    const g = f.y >= G - .5, a = OUV.get(f), n = { mv: f.mv, hp: f.hp, bs: f.bs, g, fl: f.fl, kd: f.kd, rl: f.rl, sa: f.sa, cmb: f.cmb, buff: f.buff };
+    OUV.set(f, n);
+    if (!a) continue;
+    const p = (TOMCAT[f.h.cat] || 1) * (f.z > 1.25 ? .85 : f.z < .8 ? 1.3 : 1);
+    if (a.g && !g && f.vy < 0 && f.stun <= 0 && !f.kd) toca('pulo', p);
+    if (!a.fl && f.fl > 0) toca('pirueta', p);
+    if (!a.g && g) toca(f.kd > 0 ? 'plof' : 'pouso');
+    if (!a.kd && f.kd > 0) toca(g ? 'plof' : 'queda');
+    if (!a.rl && f.rl > 0) toca('rolar');
+    if (f.mv && f.mv !== a.mv && f.mv != 'pouso') {
+      const m = MV[f.mv], an = m.an || f.mv, lb = LIMB[an] || '';
+      toca(m.alt == 'b' ? 'baixo_ar' : /gir|piao|mortal/.test(an) ? 'giro_ar' : lb[0] == 'f' ? 'chute_ar' : 'soco_ar', p);
+    }
+    const perda = a.hp - f.hp;
+    if (perda > .4) {
+      if (a.bs - f.bs > 1) toca('defesa');
+      else if (perda < 2.5) toca('pingo');
+      else toca(perda < 8 ? 'hit_leve' : perda < 14 ? 'hit_medio' : 'hit_forte', p);
+      if (a.hp > 0 && f.hp <= 0) toca(f.h.sp == 'none' ? 'plof' : 'ko');
+    } else if (perda < -f.max * .15) toca('item');
+    if (a.bs > 0 && f.bs <= 0) toca('quebra');
+    if (!a.buff && f.buff >= 400) toca('item');
+    if (f.cmb > a.cmb && f.cmb >= 3) toca('combo', 1, f.cmb);
+    if (!a.sa && f.sa > 0) {
+      toca('esp_' + (JEITO[f.h.sp] || 'golpe'));
+      if (f.h.n == 'Wulkan' && f.h.sp == 'time' && !(f.stl > 0)) musicaToca(); // só quando o próprio Wulkan usa a super
+    }
+  }
+}
+
+// ---- botões de som e destravamento no primeiro toque ----
+['pointerdown', 'keydown', 'touchend'].forEach(n => document.addEventListener(n, somLiga, { passive: true }));
+document.addEventListener('click', e => { if (e.target && e.target.closest && e.target.closest('.btn,.card,.mode,.chip,.link') && !e.target.closest('.somb')) toca('menu'); });
+document.addEventListener('visibilitychange', () => { if (SOM.ac && document.hidden && SOM.ac.state == 'running') SOM.ac.suspend(); });
+for (const [onde, estilo] of [['#tc', 'min-height:38px;font-size:19px;margin:0 0 10px;background:#fff'], ['header p', 'min-height:38px;font-size:19px;margin:12px 0 0;background:#fff']]) {
+  const ref = $(onde), b = document.createElement('button');
+  b.className = 'btn somb'; b.style.cssText = estilo; b.textContent = SOM.on ? '🔊 Som ligado' : '🔇 Som desligado'; b.onclick = somBotao;
+  if (ref && ref.after) { ref.after(' ', b); }
+}
+
+// ---- conferência: renderiza cada som "em silêncio" e mede se saiu áudio. Uso no console: await somTeste() ----
+async function somTeste() {
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext, r = {};
+  const mede = async (seg, f) => { const ac = new OAC(1, Math.ceil(44100 * seg), 44100); f(ac); const b = await ac.startRendering(), ch = b.getChannelData(0); let s = 0, pico = 0; for (let i = 0; i < ch.length; i++) { s += ch[i] * ch[i]; pico = Math.max(pico, Math.abs(ch[i])); } return { rms: +Math.sqrt(s / ch.length).toFixed(4), pico: +pico.toFixed(3) }; };
+  for (const nome of Object.keys(SONS)) r[nome] = await mede(1.6, ac => SONS[nome](ac, ac.destination, .01, 1, 4));
+  r.musicaWulkan = await mede(10.5, ac => musicaWulkan(ac, ac.destination, .01));
+  return r;
+}
 </script>
 <script id="vg-controles">
 // ================= CONTROLES DE TOQUE E TELA DEITADA (Etapa 2) =================
