@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -85,6 +85,12 @@ body.luta main{max-width:none;padding:8px 12px 12px}
 </style>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%A5%8A%3C/text%3E%3C/svg%3E">
 <meta name="description" content="Vigilantes: jogo de luta com 26 heróis, modo história, horda e online.">
+<style id="vg-zoom-css">
+/* Trava de zoom: tocar rápido nos botões (soco, soco, soco) não pode dar zoom na página no iPad/iPhone */
+html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
+#game,#game *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#cv,.pad,.pad *{touch-action:none}
+</style>
 </head>
 <body>
 <main>
@@ -588,7 +594,7 @@ else if(m=='sun')g=`<circle cx="100" cy="100" r="62" fill="#fff" opacity=".25"/>
 else if(m=='storm')g=`<ellipse cx="50" cy="50" rx="60" ry="24" fill="rgba(0,0,0,.35)"/><ellipse cx="150" cy="40" rx="64" ry="22" fill="rgba(0,0,0,.35)"/><polygon points="160,60 146,100 158,100 150,134 176,88 162,88" fill="${ac}" opacity=".9"/>`;
 else{for(let n=0;n<26;n++)g+=`<circle cx="${(r(n)*200).toFixed(0)}" cy="${(r(n+7)*190).toFixed(0)}" r="${(1+r(n+2)*1.6).toFixed(1)}" fill="#fff" opacity=".8"/>`;g+=`<path d="M20 20L90 90M150 10L190 50" stroke="${ac}" stroke-width="5" opacity=".8" stroke-linecap="round"/><circle cx="92" cy="92" r="7" fill="${ac}"/>`}
 return g};
-function art(h,i){const[t,b,m,ac]=SC[h.n],F=faceBuild(Object.assign({nf:NEWF.includes(h.n)},FACE[h.n](h.c,h.a)),i),c=h.c,a=h.a,
+function art(h,i){const[t,b,m,ac]=SC[h.n],F=faceBuild(Object.assign({nf:NEWF.includes(h.n)},FACE[h.n](...(window.corCard?corCard(h):[h.c,h.a]))),i),c=h.c,a=h.a,
 rays=Array.from({length:14},(_,n)=>{const q=n*Math.PI/7;return`<polygon points="100,110 ${(100+300*Math.cos(q-.08)).toFixed(0)},${(110+300*Math.sin(q-.08)).toFixed(0)} ${(100+300*Math.cos(q+.08)).toFixed(0)},${(110+300*Math.sin(q+.08)).toFixed(0)}" fill="#fff"/>`}).join('');
 return shd(`<svg viewBox="0 0 200 240" role="img" aria-label="Desenho de ${h.n}"><defs><pattern id="d${i}" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="1.8" fill="#000" opacity=".16"/></pattern><linearGradient id="bg${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${t}"/><stop offset="1" stop-color="${b}"/></linearGradient><radialGradient id="rg${i}"><stop offset="0" stop-color="${ac}" stop-opacity=".6"/><stop offset="1" stop-color="${ac}" stop-opacity="0"/></radialGradient><radialGradient id="vg${i}" cx=".5" cy=".5" r=".75"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient></defs><rect width="200" height="240" fill="url(#bg${i})"/>${mo(m,i,ac)}<g opacity=".1">${rays}</g><circle cx="100" cy="112" r="98" fill="url(#rg${i})"/><rect width="200" height="240" fill="url(#d${i})"/><g stroke="#111" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"><g transform="translate(100 160) rotate(-1) scale(1.05) translate(-100 -160)"><g transform="rotate(0 100 172)">${F[0]}</g><path d="M-24 242Q-10 176 100 168Q210 176 224 242Z" fill="${c}"/><path d="M22 216Q60 198 100 202Q140 198 178 216" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="2"/><path d="M100 202V242M62 214Q80 226 98 222M138 214Q120 226 102 222M64 184Q50 188 36 204M136 184Q150 188 164 204" fill="none" stroke="#000" stroke-width="1.6" opacity=".35"/><path d="M56 176Q100 214 144 176L132 170Q100 198 68 170Z" fill="${a}"/><g transform="translate(100 220) scale(.62)" stroke-width="4">${ICON[h.sp]}</g><g transform="rotate(0 100 172)">${F[1]}</g></g></g><rect width="200" height="240" fill="url(#vg${i})"/><text x="10" y="34" transform="rotate(-8 10 34)">${ON[h.n]}</text></svg>`,i)}
 const show=id=>{['modes','roster','game','online'].forEach(x=>$('#'+x).hidden=x!=id);document.body.classList.toggle('luta',id=='game');if(id=='game')setTimeout(()=>window.aoGirar&&aoGirar(),400)};
@@ -881,6 +887,7 @@ const ARMS = p => ({ t: p.t, s1: p.s1, e1: p.e1, s2: p.s2, e2: p.e2 });
 function poseOf(f) {
   const h = f.h, S = STANCE[h.cat] || STANCE.Elemental, g = f.y >= G - .5, sp = Math.abs(f.vx);
   let p = Object.assign({}, POSE0, S);
+  { const LK = typeof LOOK != 'undefined' && LOOK[h.n]; if (LK && LK.t) p.t += LK.t; }
   const cb = st == 'end' && WN && f.t === WN.t && f.hp > 0, lose = (st == 'end' && LS === f) || f.hp <= 0;
   if (lose) return Object.assign(p, { r: -90, hy: 9, t: 0, h1: 6, k1: 10, h2: -6, k2: 12, s1: 160, e1: 15, s2: 150, e2: 20 });
   if (cb) {
@@ -915,17 +922,17 @@ function poseOf(f) {
   return p;
 }
 
-// Desenha o esqueleto já posicionado (espaço do corpo: x para frente, y para baixo, pés em y=0).
+// Desenha o esqueleto já posicionado (espaço do corpo: x para frente, y para baixo, pés em y=0), vestido com a roupa (vg-roupas).
+const BOOTF = { alta: .12, pesada: .32, curta: .55, sapatilha: .86, tenis: .8, pontuda: .7 }; // onde a bota começa na canela
 function drawRig(f, p, R, wd, C, sp) {
-  const sn = a => Math.sin(a * DG), cs = a => Math.cos(a * DG);
+  const sn = a => Math.sin(a * DG), cs = a => Math.cos(a * DG), O = C.o;
   const air = f.y < (f.gy || G) - .5;
   const legDown = (h, k) => R.th * cs(h) + R.sh * cs(h - k);
   const hipH = p.hy != null ? p.hy : air ? (R.th + R.sh) * .92 : Math.max(legDown(p.h1, p.k1), legDown(p.h2, p.k2));
-  const SW = R.sw * wd, HW = R.hw * wd, LG = R.lg * wd, AR = R.ar * wd;
+  const SW = R.sw * wd, HW = R.hw * wd, LG = R.lg * wd, AR = R.ar * wd, TO = R.to;
   ctx.save(); ctx.translate(0, -hipH - p.lift); ctx.rotate(p.r * DG); ctx.scale(p.sx < 0 ? Math.min(-.22, p.sx) : Math.max(.22, p.sx), 1);
-
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const S = [sn(p.t) * R.to, -cs(p.t) * R.to], HD = [S[0] + sn(p.t) * 12, S[1] - cs(p.t) * 12];
+  const S = [sn(p.t) * TO, -cs(p.t) * TO], HD = [S[0] + sn(p.t) * 12, S[1] - cs(p.t) * 12];
   const leg = (h, k) => { const kn = [sn(h) * R.th, cs(h) * R.th]; return [kn, [kn[0] + sn(h - k) * R.sh, kn[1] + cs(h - k) * R.sh], h - k]; };
   const arm = (s, e) => { const el = [S[0] + sn(s) * R.ua, S[1] + cs(s) * R.ua]; return [el, [el[0] + sn(s + e) * R.fa, el[1] + cs(s + e) * R.fa]]; };
   const limb = (a, b, c, w, c1, c2) => {
@@ -933,32 +940,53 @@ function drawRig(f, p, R, wd, C, sp) {
     ctx.strokeStyle = c1; ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
     ctx.strokeStyle = c2; ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.stroke();
   };
+  const seg = (a, b, w, c) => { ctx.strokeStyle = '#111'; ctx.lineWidth = w + 5; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); ctx.strokeStyle = c; ctx.lineWidth = w; ctx.stroke(); };
   const dot = (q, r, c) => { ctx.fillStyle = c; ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(q[0], q[1], r, 0, 7); ctx.fill(); ctx.stroke(); };
+  const lerp = (a, b, u) => [a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u];
   const drawLeg = (L, back) => {
-    limb([0, 0], L[0], L[1], LG, back ? C.sd : C.s, back ? C.bd : C.b);
-    const a = L[2], toe = [L[1][0] + cs(a) * 7 * wd, L[1][1] - sn(a) * 7 * wd];
-    ctx.strokeStyle = '#111'; ctx.lineWidth = LG + 3; ctx.beginPath(); ctx.moveTo(L[1][0], L[1][1]); ctx.lineTo(toe[0], toe[1]); ctx.stroke();
-    ctx.strokeStyle = back ? C.bd : C.b; ctx.lineWidth = LG - 2; ctx.stroke();
+    const lc = back ? C.ld : C.l, bc = back ? C.btd : C.bt, k = O.bk2 || 'curta', pesada = k == 'pesada';
+    limb([0, 0], L[0], L[1], LG, lc, lc);
+    seg(lerp(L[0], L[1], BOOTF[k] || .55), L[1], LG + (pesada ? 2.5 : .5), bc);
+    const a = L[2], tl = (k == 'tenis' ? 10 : k == 'pontuda' ? 11 : pesada ? 9 : 7) * wd, toe = [L[1][0] + cs(a) * tl, L[1][1] - sn(a) * tl];
+    seg(L[1], toe, LG - (k == 'pontuda' ? 4 : 1), bc);
   };
-  const drawArm = (A, back) => { limb(S, A[0], A[1], AR, back ? C.sd : C.s, back ? C.sd : C.s); dot(A[1], AR * .75 + 1.5, C.g); };
+  const drawArm = (A, back) => {
+    const nu = O.arm == 'pele', curta = O.arm == 'curta', sd = back ? C.sd : C.s, kk = back ? C.kd : C.k;
+    limb(S, A[0], A[1], AR, nu ? kk : sd, nu || curta ? kk : sd);
+    if (nu || curta) seg(lerp(A[0], A[1], .62), A[1], AR + .5, back ? C.gd : C.g); // munhequeira / bracelete
+    if (temEx(O, 'nadadeiras')) { const m = lerp(A[0], A[1], .5); ctx.fillStyle = C.a; ctx.strokeStyle = '#111'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(m[0] - 4, m[1]); ctx.lineTo(m[0] - 9, m[1] - 9); ctx.lineTo(m[0] + 4, m[1] - 2); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+    if (temEx(O, 'laminas_braco')) seg(lerp(A[0], A[1], .2), lerp(A[0], A[1], 1.25), 2, '#cfd8dc');
+    const big = O.gk == 'grande' ? 1.45 : 1, gold = !back && temEx(O, 'luva_dourada');
+    dot(A[1], (AR * .75 + 1.5) * big * (gold ? 1.2 : 1), gold ? '#ffd23f' : back ? C.gd : C.g);
+    if (O.gk == 'garra') { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.beginPath(); for (const d of [-3, 0, 3]) { ctx.moveTo(A[1][0] + 3, A[1][1] + d); ctx.lineTo(A[1][0] + 8, A[1][1] + d * 1.4); } ctx.stroke(); }
+  };
   const L1 = leg(p.h1, p.k1), L2 = leg(p.h2, p.k2), A1 = arm(p.s1, p.e1), A2 = arm(p.s2, p.e2);
   if (trkNow) { const q = { f1: L1[1], f2: L2[1], h1: A1[1], h2: A2[1] }[LIMB[f.mv]], M = ctx.getTransform(); if (q) trkNow.push(M.transformPoint(new DOMPoint(q[0], q[1]))); }
+  // 1) peças de trás
+  ctx.save(); ctx.rotate(p.t * DG); roupaAtras(O, C, SW, HW, TO, R.th + R.sh, sp, f); ctx.restore();
+  // 2) braço e perna de trás
   drawArm(A2, 1); drawLeg(L2, 1);
-  // tronco (no referencial do tronco: y para cima negativo)
+  // 3) tronco: forma, padrão, cinto, emblema, extras
   ctx.save(); ctx.rotate(p.t * DG);
-  if (C.cape) { const fl = Math.sin(tf * .2) * 3; ctx.fillStyle = C.cape; ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-SW * .6, -R.to + 3); ctx.lineTo(-SW - 14 - sp * 3 - fl, -6); ctx.lineTo(-SW - 8 - sp * 2, 4); ctx.lineTo(-4, -6); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-  ctx.fillStyle = C.s; ctx.strokeStyle = '#111'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(-HW, 3); ctx.lineTo(HW, 3); ctx.lineTo(SW, -R.to + 4); ctx.quadraticCurveTo(SW, -R.to - 2, SW - 6, -R.to - 2); ctx.lineTo(-SW + 6, -R.to - 2); ctx.quadraticCurveTo(-SW, -R.to - 2, -SW, -R.to + 4); ctx.closePath(); ctx.fill(); ctx.stroke();
+  const torso = () => { ctx.beginPath(); ctx.moveTo(-HW, 3); ctx.lineTo(HW, 3); ctx.lineTo(SW, -TO + 4); ctx.quadraticCurveTo(SW, -TO - 2, SW - 6, -TO - 2); ctx.lineTo(-SW + 6, -TO - 2); ctx.quadraticCurveTo(-SW, -TO - 2, -SW, -TO + 4); ctx.closePath(); };
+  ctx.fillStyle = C.s; torso(); ctx.fill();
+  if (O.pt && O.pt != 'liso' && O.pt != 'camiseta') { ctx.save(); torso(); ctx.clip(); padrao(O.pt, C, SW, HW, TO); ctx.restore(); }
+  ctx.strokeStyle = '#111'; ctx.lineWidth = 3; torso(); ctx.stroke();
+  barriga(O, C, HW, TO);
   ctx.fillStyle = C.a; ctx.fillRect(-HW - .5, -9, HW * 2 + 1, 6); ctx.strokeRect(-HW - .5, -9, HW * 2 + 1, 6);
-  dot([2, -R.to * .64], 5.5, C.a);
+  roupaTronco(O, C, SW, HW, TO);
+  emblema(O.em, C, 3, -TO * .64);
+  if (O.pt == 'golaAlta') { ctx.fillStyle = C.s2; ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.moveTo(-SW * .6, -TO - 1); ctx.lineTo(-SW * .5, -TO - 12); ctx.lineTo(SW * .45, -TO - 12); ctx.lineTo(SW * .6, -TO - 1); ctx.closePath(); ctx.fill(); ctx.stroke(); }
   ctx.restore();
-  drawLeg(L1, 0);
-  // cabeça (mesmo desenho de antes: cabelo, máscara, olhos, barba, óculos, capacete, chapéu)
-  ctx.save(); ctx.translate(HD[0], HD[1]); ctx.rotate((p.t * .6 + (f.stun > 0 ? -16 : 0)) * DG); ctx.scale(.82, .82); drawHead(f, C);
- ctx.restore();
-  drawArm(A1, 0);
+  // 4) perna da frente e saia do manto
+  drawLeg(L1, 0); roupaSaia(O, C, HW);
+  // 5) cabeça (mesmo desenho dos cards: cabelo, máscara, olhos, barba, óculos, capacete, chapéu)
+  ctx.save(); ctx.translate(HD[0], HD[1]); ctx.rotate((p.t * .6 + (f.stun > 0 ? -16 : 0)) * DG); ctx.scale(.82, .82); drawHead(f, C); ctx.restore();
+  // 6) braço da frente, ombros, escudo e arma
+  drawArm(A1, 0); ombros(O, C, S, SW, p.t);
+  if (temEx(O, 'escudo')) { const m = lerp(A1[0], A1[1], .55); ctx.fillStyle = C.s2; ctx.strokeStyle = '#111'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(m[0] + 3, m[1], 15 * wd, 0, 7); ctx.fill(); ctx.stroke(); ctx.strokeStyle = C.a; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(m[0] + 3, m[1], 10 * wd, 0, 7); ctx.stroke(); ctx.fillStyle = C.a; ctx.beginPath(); ctx.arc(m[0] + 3, m[1], 3.5, 0, 7); ctx.fill(); }
   if (f.h.wpn) {
-    const aa = f.axe > 0 ? -Math.PI / 2 : -1.1 + Math.sin(f.at > 0 ? (1 - f.at / 18) * Math.PI : 0) * 1.3, hx = A1[1][0], hy = A1[1][1];
+    const aa = f.axe > 0 ? -Math.PI / 2 : -1.1 + Math.sin(f.mv ? Math.min(1, f.mt / 12) * Math.PI : 0) * 1.3, hx = A1[1][0], hy = A1[1][1];
     const ex = hx + Math.cos(aa) * 42, ey = hy + Math.sin(aa) * 42;
     ctx.strokeStyle = '#111'; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(ex, ey); ctx.stroke(); ctx.strokeStyle = '#7b4a22'; ctx.lineWidth = 5; ctx.stroke();
     dot([ex + Math.cos(aa + 1.6) * 10, ey + Math.sin(aa + 1.6) * 10], 13, f.axe > 0 ? '#ffe66d' : '#cfd8dc');
@@ -993,13 +1021,6 @@ function drawHead(f, C) {
   if (m != 'full' && m != 'cowl') { ctx.strokeStyle = '#111'; ctx.lineWidth = 2.8; ctx.beginPath(); ctx.moveTo(2, h.sf ? -4 : -6); ctx.lineTo(12, h.sf ? -6 : -3); ctx.stroke(); }
   if ((m == 'none' || m == 'band') && !h.bd) { ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath(); if (op) { ctx.arc(8, 8, 3.5, 0, 7); ctx.fillStyle = '#600'; ctx.fill(); } else { ctx.moveTo(4, 8); ctx.quadraticCurveTo(8, 11, 12, 7); } ctx.stroke(); }
   if (h.bd) { ctx.fillStyle = h.bd; ctx.strokeStyle = '#111'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.ellipse(6, 10, 10, 8, 0, 0, 7); ctx.fill(); ctx.stroke(); }
-}
-
-// Cores do lutador (Etapa 1: as de hoje; a Etapa 3 troca pelas roupas novas).
-function colorsOf(f) {
-  const h = f.h, fl = f.stun > 0 && f.stun % 4 < 2;
-  if (fl) return { s: '#fff', sd: '#eee', b: '#fff', bd: '#eee', g: '#fff', a: '#fff', k: '#fff', cape: '#fff' };
-  return { s: h.c, sd: dk(h.c, .72), b: dk(h.c, .5), bd: dk(h.c, .38), g: h.a, a: h.a, k: h.sk, cape: h.a };
 }
 
 // Mesma assinatura de antes: draw() chama body(lutador, transparênciaDoFantasma).
@@ -1045,7 +1066,196 @@ function folha() {
     requestAnimationFrame(go);
   })();
 }
-if (/[?&]folha/.test(location.search)) folha();
+addEventListener('load', () => { if (/[?&]folha/.test(location.search)) folha(); }); // depois de todos os blocos (roupas)
+</script>
+<script id="vg-roupas">
+// ================= ROUPAS E CORES DE CADA PERSONAGEM (Etapa 3) =================
+// Só desenho. s = cor principal · s2 = cor secundária · a = detalhes (cinto, emblema)
+// pt = padrão do traje · em = emblema no peito · bk = peça de trás (bc = cor) · gl = luvas (gk = tipo)
+// bt = botas (bk2 = tipo) · l = calça · arm = mangas ('pele' sem manga, 'curta' manga curta) · sh = ombros · ex = extras · t = postura
+// ★ = aparência aprovada pelo Rafael: mantém as cores de antes.
+const LOOK = {
+  Wulkan: { s: '#2f8fff', s2: '#1b4f9c', a: '#ffd23f', pt: 'raio', em: 'relogio', bk: 'cachecol', bc: '#ffd23f', gl: '#ffd23f', bt: '#ffd23f', bk2: 'curta', l: '#2f8fff' },
+  Rodrigo: { s: '#6fbf73', s2: '#3d6b40', a: '#cfd8dc', pt: 'regata', em: 'chevron', arm: 'pele', gl: '#cfd8dc', bt: '#3b3b3b', bk2: 'pesada', l: '#7d8790' }, // ★
+  David: { s: '#7c4dff', s2: '#2a2a48', a: '#b39ddb', pt: 'ninja', bk: 'laminas', gl: '#2a2a48', bt: '#2a2a48', bk2: 'sapatilha', l: '#4527a0' },
+  Caio: { s: '#e53935', s2: '#8e1b10', a: '#ffb347', pt: 'chamas', em: 'chama', sh: 'ombreira1', gl: '#ffb347', bt: '#8e1b10', bk2: 'alta', l: '#b71c1c' },
+  Lucas: { s: '#bfe9ff', s2: '#0d3b66', a: '#e9fbff', pt: 'faixas', em: 'floco', sh: 'cristal', gl: '#e9fbff', bt: '#0d3b66', bk2: 'alta', l: '#0d3b66' },
+  Bianca: { s: '#e040b0', s2: '#4b1d5c', a: '#ffd23f', pt: 'macacao', em: 'ima', gl: '#b0bec5', gk: 'grande', bt: '#4b1d5c', bk2: 'curta', l: '#e040b0' },
+  Camila: { s: '#ffa63d', s2: '#3a2a12', a: '#3a2a12', pt: 'listras', bk: 'cauda', bc: '#ffa63d', gl: '#ffa63d', gk: 'garra', bt: '#3a2a12', bk2: 'sapatilha', l: '#ffa63d' }, // ★
+  Helena: { s: '#c9c9d6', s2: '#111118', a: '#ffffff', pt: 'metade', em: 'lua', bk: 'capa_longa', bc: '#111118', gl: '#111118', bt: '#111118', bk2: 'alta', l: '#111118' }, // ★
+  Marcos: { s: '#8aa0b3', s2: '#37474f', a: '#cfd8dc', pt: 'armadura', sh: 'armadura', ex: ['escudo'], gl: '#37474f', gk: 'grande', bt: '#546e7a', bk2: 'pesada', l: '#37474f' }, // ★
+  Sofia: { s: '#ff8fb1', s2: '#c2185b', a: '#ffd54f', pt: 'tunica', em: 'estrela', bk: 'capa_curta', bc: '#ffd54f', gl: '#ffd54f', bt: '#ffd54f', bk2: 'curta', l: '#ff8fb1' },
+  Joe: { s: '#2bd9a8', s2: '#0f8a6a', a: '#ff4d6d', pt: 'esportivo', arm: 'curta', gl: '#ff4d6d', bt: '#ff4d6d', bk2: 'tenis', l: '#1f2a33' }, // ★
+  'Otávio': { s: '#5e35b1', s2: '#311b92', a: '#fff176', pt: 'redemoinho', em: 'raio', bk: 'manto', bc: '#311b92', gl: '#fff176', bt: '#311b92', bk2: 'sapatilha', l: '#311b92', t: 10 },
+  Luiza: { s: '#9b5de5', s2: '#4a148c', a: '#ffd6f5', pt: 'espiral', bk: 'manto', bc: '#4a148c', gl: '#ffd6f5', bt: '#4a148c', bk2: 'pontuda', l: '#4a148c' },
+  Michel: { s: '#283593', s2: '#1a237e', a: '#c5cae9', pt: 'runas', em: 'hex', bk: 'sobretudo', bc: '#283593', gl: '#c5cae9', bt: '#1a237e', bk2: 'curta', l: '#1a1a2e' },
+  Henrique: { s: '#ffb300', s2: '#6d4c41', a: '#4e342e', pt: 'colete_lados', arm: 'pele', sh: 'pele', gl: '#8d6e63', bt: '#8d6e63', bk2: 'pesada', l: '#5d4037' }, // ★
+  Tom: { s: '#5c4b8a', s2: '#2e2546', a: '#e0e0e0', pt: 'golaAlta', bk: 'sobretudo', bc: '#5c4b8a', gl: '#ffffff', bt: '#1b1b24', bk2: 'curta', l: '#2e2546' }, // ★
+  Katz: { s: '#90a4ae', s2: '#546e7a', a: '#d32f2f', pt: 'armadura_faixa', sh: 'armadura', gl: '#546e7a', gk: 'grande', bt: '#546e7a', bk2: 'pesada', l: '#546e7a' },
+  Juju: { s: '#1a237e', s2: '#0d1442', a: '#ff7a3d', pt: 'estrelas', em: 'cometa', bk: 'capa_estrelada', bc: '#0d1442', gl: '#ff7a3d', bt: '#ff7a3d', bk2: 'curta', l: '#1a237e' },
+  'Harry Burger': { s: '#d84315', s2: '#8a2a0c', a: '#ffcc80', pt: 'camiseta', em: 'hamburguer', arm: 'curta', ex: ['barriga', 'suspensorios'], gl: '#ffcc80', gk: 'grande', bt: '#4e342e', bk2: 'pesada', l: '#1565c0' }, // ★
+  Nando: { s: '#4caf50', s2: '#1b5e20', a: '#c6ff6a', pt: 'manchas', ex: ['mascara_gas', 'frascos'], gl: '#1b5e20', bt: '#1b5e20', bk2: 'alta', l: '#1b5e20' }, // ★
+  Beni: { s: '#00acc1', s2: '#005f6b', a: '#e0f7fa', pt: 'glitch', bk: 'capuz', bc: '#005f6b', gl: '#005f6b', bt: '#005f6b', bk2: 'sapatilha', l: '#005f6b' }, // ★
+  Vampira: { s: '#6a1b9a', s2: '#1a0a24', a: '#e91e63', pt: 'corpete', bk: 'capa_gola', bc: '#1a0a24', gl: '#1a0a24', bt: '#1a0a24', bk2: 'alta', l: '#1a0a24' },
+  Bernardo: { s: '#00897b', s2: '#f5f0e6', a: '#ffd23f', pt: 'colete', ex: ['luva_dourada'], gl: '#263238', bt: '#263238', bk2: 'curta', l: '#263238' },
+  Gustavo: { s: '#795548', s2: '#4e342e', a: '#ffb74d', pt: 'rachaduras', sh: 'pedra', gl: '#8d6e63', gk: 'grande', bt: '#4e342e', bk2: 'pesada', l: '#4e342e' },
+  Isabela: { s: '#f5fbff', s2: '#4dd0e1', a: '#4dd0e1', pt: 'faixas', bk: 'fitas', bc: '#4dd0e1', gl: '#e0f7fa', bt: '#e0f7fa', bk2: 'sapatilha', l: '#f5fbff' },
+  Mariana: { s: '#0277bd', s2: '#01579b', a: '#80d8ff', pt: 'escamas', em: 'gota', ex: ['nadadeiras'], gl: '#80d8ff', bt: '#01579b', bk2: 'curta', l: '#0277bd' },
+  // vilões
+  Valdo: { s: '#6d4c41', s2: '#ff6f00', a: '#ff6f00', pt: 'colete', em: 'circulo', gl: '#3e2723', bt: '#3e2723', bk2: 'pesada', l: '#3e2723' },
+  Serena: { s: '#8e1b4a', s2: '#2b0b1a', a: '#ff1744', pt: 'corpete', ex: ['laminas_braco'], gl: '#2b0b1a', bt: '#2b0b1a', bk2: 'alta', l: '#2b0b1a' },
+  Murilo: { s: '#455a64', s2: '#b71c1c', a: '#b71c1c', pt: 'faixas', bk: 'sobretudo', bc: '#37474f', gl: '#263238', bt: '#263238', bk2: 'curta', l: '#263238' },
+  'Ícaro': { s: '#311b92', s2: '#1a1046', a: '#7c4dff', pt: 'liso', em: 'circulo', bk: 'asas', bc: '#9e9e9e', gl: '#7c4dff', bt: '#1a1046', bk2: 'alta', l: '#1a1046' },
+  Ramiro: { s: '#8d1b1b', s2: '#3b0a0a', a: '#3b0a0a', pt: 'regata', arm: 'pele', gl: '#616161', bt: '#3b0a0a', bk2: 'pesada', l: '#3b0a0a' },
+  Olga: { s: '#5d4037', s2: '#3e2723', a: '#ffb300', pt: 'regata', arm: 'pele', gl: '#ffb300', bt: '#3e2723', bk2: 'pesada', l: '#5d4037' },
+  Fausto: { s: '#bf360c', s2: '#4a1405', a: '#ffab40', pt: 'chamas', bk: 'manto', bc: '#4a1405', gl: '#ffab40', bt: '#4a1405', bk2: 'alta', l: '#4a1405' },
+  Nilton: { s: '#37474f', s2: '#263238', a: '#90a4ae', pt: 'golaAlta', bk: 'sobretudo', bc: '#455a64', gl: '#263238', bt: '#212121', bk2: 'alta', l: '#263238' },
+  Rosa: { s: '#ad1457', s2: '#f8bbd0', a: '#f8bbd0', pt: 'colete', gl: '#6a0d34', bt: '#6a0d34', bk2: 'alta', l: '#6a0d34' },
+  Jairo: { s: '#2e7d32', s2: '#c5e1a5', a: '#c5e1a5', pt: 'colete', gl: '#1b5e20', bt: '#5d4037', bk2: 'alta', l: '#795548' },
+  'Moisés': { s: '#4a148c', s2: '#2a0a50', a: '#ce93d8', pt: 'runas', bk: 'manto', bc: '#2a0a50', gl: '#ce93d8', bt: '#2a0a50', bk2: 'pontuda', l: '#2a0a50' },
+  Clotilde: { s: '#263238', s2: '#000000', a: '#b0bec5', pt: 'liso', bk: 'manto', bc: '#000000', gl: '#000000', bt: '#000000', bk2: 'pontuda', l: '#000000' },
+  Zeca: { s: '#f9a825', s2: '#c17900', a: '#fff59d', pt: 'raio', em: 'raio', gl: '#fff59d', bt: '#c17900', bk2: 'tenis', l: '#c17900' },
+  Dalton: { s: '#455a64', s2: '#263238', a: '#ff7043', pt: 'macacao', em: 'circulo', gl: '#ff7043', bt: '#263238', bk2: 'pesada', l: '#455a64' },
+  Gaspar: { s: '#6d4c41', s2: '#ffcc80', a: '#ffcc80', pt: 'colete', gl: '#3e2723', bt: '#3e2723', bk2: 'pesada', l: '#3e2723' },
+  // chefes
+  'Ômega': { s: '#1b1b1b', s2: '#c1121f', a: '#c1121f', pt: 'armadura_faixa', sh: 'armadura', bk: 'capa', bc: '#c1121f', gl: '#c1121f', gk: 'grande', bt: '#1b1b1b', bk2: 'pesada', l: '#1b1b1b' },
+  'Titã Rubro': { s: '#b3541e', s2: '#3b1d0a', a: '#ffcc00', pt: 'rachaduras', sh: 'pedra', gl: '#6d4c41', gk: 'grande', bt: '#3b1d0a', bk2: 'pesada', l: '#3b1d0a' },
+  'Rainha Nyx': { s: '#5b2a86', s2: '#12081f', a: '#e040fb', pt: 'corpete', bk: 'capa_gola', bc: '#12081f', gl: '#12081f', bt: '#12081f', bk2: 'alta', l: '#12081f' },
+  // zumbis
+  Zumbi: { s: '#6b8f4e', s2: '#3d5a2a', a: '#3d5a2a', pt: 'liso', gl: '#9bb58a', bt: '#2b3a22', bk2: 'curta', l: '#4a3b2a' },
+  Corredor: { s: '#8f4e4e', s2: '#5a2a2a', a: '#5a2a2a', pt: 'liso', gl: '#b58a8a', bt: '#3a1a1a', bk2: 'tenis', l: '#3a1a1a' },
+  Brutamontes: { s: '#4e5f8f', s2: '#2a2f5a', a: '#2a2f5a', pt: 'regata', arm: 'pele', gl: '#8a95b5', bt: '#1a1f3a', bk2: 'pesada', l: '#2a2f5a' },
+};
+function lookOf(h) {
+  return LOOK[h.n] || (LOOK[h.n] = { s: h.c, s2: dk(h.c, .6), a: h.a, pt: 'liso', em: 'circulo', bk: h.cat == 'Mágico' ? 'manto' : '', bc: dk(h.c, .6), gl: h.a, bt: dk(h.c, .45), bk2: 'curta', l: dk(h.c, .6) });
+}
+const temEx = (O, x) => !!(O.ex && O.ex.includes(x));
+
+// Cores usadas no desenho. Piscar branco quando apanha (como antes).
+function colorsOf(f) {
+  const O = lookOf(f.h);
+  if (f.stun > 0 && f.stun % 4 < 2) { const w = '#fff'; return { o: O, s: w, sd: w, s2: w, a: w, k: w, kd: w, g: w, gd: w, l: w, ld: w, bt: w, btd: w, bc: w }; }
+  const sk = f.h.sk || '#e0b48f';
+  return { o: O, s: O.s, sd: dk(O.s, .74), s2: O.s2, a: O.a, k: sk, kd: dk(sk, .82), g: O.gl, gd: dk(O.gl, .78), l: O.l, ld: dk(O.l, .74), bt: O.bt, btd: dk(O.bt, .78), bc: O.bc || O.s2 };
+}
+
+// Padrão do traje, no referencial do tronco (quadril em 0,0; ombros em y=-TO). Já recortado no formato do tronco.
+function padrao(pt, C, SW, HW, TO) {
+  const X = ctx;
+  X.save(); X.lineCap = 'round';
+  if (pt == 'raio') { X.strokeStyle = C.a; X.lineWidth = 4.5; X.beginPath(); X.moveTo(-SW, -TO * .82); X.lineTo(SW * .2, -TO * .58); X.lineTo(-SW * .25, -TO * .46); X.lineTo(SW + 2, -TO * .14); X.stroke(); }
+  else if (pt == 'faixas' || pt == 'esportivo') { X.fillStyle = pt == 'faixas' ? C.s2 : C.a; X.fillRect(-SW - 3, -TO - 4, 8, TO + 10); X.fillRect(SW - 5, -TO - 4, 8, TO + 10); }
+  else if (pt == 'metade') { X.fillStyle = C.s2; X.fillRect(1, -TO - 4, SW + 4, TO + 10); }
+  else if (pt == 'listras') { X.strokeStyle = C.s2; X.lineWidth = 3.5; for (const k of [.2, .44, .68]) { X.beginPath(); X.moveTo(-SW - 2, -TO * k); X.lineTo(-SW * .3, -TO * k - 5); X.stroke(); X.beginPath(); X.moveTo(SW + 2, -TO * (k + .1)); X.lineTo(SW * .3, -TO * (k + .1) - 5); X.stroke(); } }
+  else if (pt == 'chamas') { X.fillStyle = C.a; X.beginPath(); X.moveTo(-SW - 3, 5); for (let i = 0; i <= 6; i++) X.lineTo(-SW + i * SW / 3, i % 2 ? -TO * (.28 + (i % 3) * .07) : -TO * .06); X.lineTo(SW + 3, 5); X.closePath(); X.fill(); }
+  else if (pt == 'manchas') { X.fillStyle = C.a; for (const [x, y, r] of [[-6, -.3, 4], [5, -.55, 3.5], [-3, -.78, 2.8], [7, -.2, 3], [-9, -.6, 2.5]]) { X.beginPath(); X.arc(x, y * TO, r, 0, 7); X.fill(); } }
+  else if (pt == 'escamas') { X.strokeStyle = C.a; X.lineWidth = 1.6; for (let y = -TO + 6, r = 0; y < 0; y += 7, r++) for (let x = -SW + (r % 2) * 3.5; x < SW + 4; x += 7) { X.beginPath(); X.arc(x, y, 3.5, 0, Math.PI); X.stroke(); } }
+  else if (pt == 'runas') { X.strokeStyle = C.a; X.lineWidth = 2; X.beginPath(); X.moveTo(-8, -TO * .22); X.lineTo(-4, -TO * .38); X.lineTo(0, -TO * .22); X.moveTo(4, -TO * .5); X.lineTo(10, -TO * .5); X.moveTo(7, -TO * .58); X.lineTo(7, -TO * .42); X.stroke(); X.beginPath(); X.arc(-4, -TO * .8, 3, 0, 7); X.stroke(); }
+  else if (pt == 'rachaduras') { X.strokeStyle = C.a; X.lineWidth = 2.4; X.beginPath(); X.moveTo(-SW + 2, -TO * .85); X.lineTo(-4, -TO * .6); X.lineTo(-8, -TO * .45); X.lineTo(2, -TO * .2); X.moveTo(SW - 2, -TO * .7); X.lineTo(4, -TO * .5); X.lineTo(8, -TO * .3); X.stroke(); }
+  else if (pt == 'estrelas') { X.fillStyle = '#fff'; for (const [x, y] of [[-8, -.8], [6, -.72], [-2, -.5], [9, -.3], [-10, -.25], [3, -.12]]) { X.beginPath(); X.arc(x, y * TO, 1.3, 0, 7); X.fill(); } X.strokeStyle = C.a; X.lineWidth = 2.5; X.beginPath(); X.moveTo(-9, -TO * .62); X.lineTo(4, -TO * .4); X.stroke(); X.fillStyle = C.a; X.beginPath(); X.arc(5, -TO * .38, 3, 0, 7); X.fill(); }
+  else if (pt == 'espiral' || pt == 'redemoinho') {
+    X.strokeStyle = C.a; X.lineWidth = 2;
+    for (const [cx, cy, R0] of pt == 'espiral' ? [[-5, -.35, 6], [5, -.72, 5]] : [[0, -.5, 9]]) { X.beginPath(); for (let t = 0; t < 12.5; t += .4) { const r = R0 * t / 12.5; X.lineTo(cx + Math.cos(t) * r, cy * TO + Math.sin(t) * r); } X.stroke(); }
+  }
+  else if (pt == 'colete') { X.fillStyle = C.s2; X.beginPath(); X.moveTo(-1, -TO - 3); X.lineTo(7, -TO - 3); X.lineTo(4, 4); X.lineTo(1, 4); X.closePath(); X.fill(); }
+  else if (pt == 'colete_lados') { X.fillStyle = C.s2; X.fillRect(-SW - 3, -TO - 4, SW, TO + 10); X.fillRect(6, -TO - 4, SW, TO + 10); }
+  else if (pt == 'regata') { X.fillStyle = C.k; X.beginPath(); X.ellipse(2, -TO - 3, 7, 6, 0, 0, Math.PI); X.fill(); }
+  else if (pt == 'armadura' || pt == 'armadura_faixa') {
+    if (pt == 'armadura_faixa') { X.fillStyle = C.a; X.fillRect(-1, -TO - 4, 6, TO + 10); }
+    X.strokeStyle = C.s2; X.lineWidth = 2.5; for (const k of [.3, .55, .8]) { X.beginPath(); X.moveTo(-SW - 2, -TO * k); X.lineTo(SW + 2, -TO * k); X.stroke(); }
+  }
+  else if (pt == 'ninja') { X.fillStyle = C.s2; X.beginPath(); X.moveTo(-SW - 3, -TO); X.lineTo(-SW + 6, -TO - 3); X.lineTo(SW + 3, -6); X.lineTo(SW - 6, 3); X.closePath(); X.fill(); }
+  else if (pt == 'tunica') { X.fillStyle = C.a; X.fillRect(-SW - 3, -TO * .74, 2 * SW + 6, 4); X.fillRect(-SW - 3, -TO * .22, 2 * SW + 6, 4); }
+  else if (pt == 'macacao') { X.strokeStyle = C.a; X.lineWidth = 2; X.beginPath(); X.moveTo(3, -TO - 2); X.lineTo(3, -2); X.stroke(); X.strokeRect(-9, -TO * .45, 7, 6); }
+  else if (pt == 'corpete') { X.strokeStyle = C.a; X.lineWidth = 1.8; X.beginPath(); for (let y = -TO * .8; y < -TO * .15; y += 6) { X.moveTo(-1, y); X.lineTo(7, y + 5); X.moveTo(7, y); X.lineTo(-1, y + 5); } X.stroke(); }
+  else if (pt == 'glitch') { X.fillStyle = C.a; X.globalAlpha = .55; for (let k = 0; k < 3; k++) X.fillRect(-SW - 2 + (Math.random() - .5) * 6, -TO * Math.random(), 2 * SW + 4, 2.5); }
+  X.restore();
+}
+
+// Emblema no peito.
+function emblema(em, C, x, y) {
+  if (!em) return;
+  const X = ctx; X.save(); X.translate(x, y);
+  X.fillStyle = C.a; X.strokeStyle = '#111'; X.lineWidth = 2; X.beginPath(); X.arc(0, 0, 6.5, 0, 7); X.fill(); X.stroke();
+  const d = C.s2 == C.a ? '#111' : C.s2; X.fillStyle = d; X.strokeStyle = d; X.lineWidth = 1.7; X.lineCap = 'round'; X.beginPath();
+  if (em == 'relogio') { X.moveTo(0, 0); X.lineTo(0, -4.2); X.moveTo(0, 0); X.lineTo(3.2, 1.5); X.stroke(); }
+  else if (em == 'chevron') { X.moveTo(-4, -2); X.lineTo(0, 2.5); X.lineTo(4, -2); X.stroke(); }
+  else if (em == 'chama') { X.moveTo(0, -5); X.quadraticCurveTo(4.5, 0, 0, 4.5); X.quadraticCurveTo(-4.5, 0, 0, -5); X.fill(); }
+  else if (em == 'floco') { for (let k = 0; k < 3; k++) { const a = k * Math.PI / 3; X.moveTo(-Math.cos(a) * 4.5, -Math.sin(a) * 4.5); X.lineTo(Math.cos(a) * 4.5, Math.sin(a) * 4.5); } X.stroke(); }
+  else if (em == 'ima') { X.arc(0, -.5, 3.4, 0, Math.PI); X.moveTo(-3.4, -.5); X.lineTo(-3.4, -3.5); X.moveTo(3.4, -.5); X.lineTo(3.4, -3.5); X.stroke(); }
+  else if (em == 'lua') { X.arc(0, 0, 4.6, 0, 7); X.fill(); X.fillStyle = C.a; X.beginPath(); X.arc(2.2, -1.2, 3.9, 0, 7); X.fill(); }
+  else if (em == 'estrela') { for (let k = 0; k < 10; k++) { const r = k % 2 ? 2 : 4.8, a = -Math.PI / 2 + k * Math.PI / 5; X.lineTo(Math.cos(a) * r, Math.sin(a) * r); } X.closePath(); X.fill(); }
+  else if (em == 'raio') { X.moveTo(1, -5); X.lineTo(-3, 1); X.lineTo(0, 1); X.lineTo(-1, 5); X.lineTo(3, -1); X.lineTo(0, -1); X.closePath(); X.fill(); }
+  else if (em == 'hex') { for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; X.lineTo(Math.cos(a) * 4.2, Math.sin(a) * 4.2); } X.closePath(); X.stroke(); }
+  else if (em == 'cometa') { X.moveTo(-4.5, -3); X.lineTo(1, 1); X.stroke(); X.beginPath(); X.arc(1.6, 1.6, 2.2, 0, 7); X.fill(); }
+  else if (em == 'hamburguer') { X.fillStyle = '#c8873a'; X.beginPath(); X.arc(0, -.5, 4.5, Math.PI, 0); X.fill(); X.fillStyle = '#5d2e0c'; X.fillRect(-4.5, 0, 9, 2); X.fillStyle = '#7cb342'; X.fillRect(-4.5, -.8, 9, 1); X.fillStyle = '#c8873a'; X.fillRect(-4.3, 2, 8.6, 2); }
+  else if (em == 'gota') { X.moveTo(0, -5); X.quadraticCurveTo(4.5, 1, 0, 4.5); X.quadraticCurveTo(-4.5, 1, 0, -5); X.fill(); }
+  X.restore();
+}
+
+// Peças de trás (capa, cachecol, manto, casaco, cauda, capuz, lâminas, fitas, asas), no referencial do tronco.
+function roupaAtras(O, C, SW, HW, TO, LEG, sp, f) {
+  const k = O.bk; if (!k) return;
+  const X = ctx, fl = Math.sin(tf * .2 + f.x * .02) * 3;
+  X.save(); X.fillStyle = C.bc; X.strokeStyle = '#111'; X.lineWidth = 3; X.lineJoin = 'round'; X.lineCap = 'round';
+  if (k.startsWith('capa') || k == 'manto') {
+    const low = k == 'capa_curta' ? 4 : k == 'capa' ? LEG * .5 : LEG * .88, sw = k == 'manto' ? .5 : 1;
+    X.beginPath(); X.moveTo(-SW * .5, -TO + 2); X.lineTo(-SW - 10 - (sp * 3 + fl) * sw, low); X.lineTo(-4 - sp * 2 * sw, low + 4); X.lineTo(3, -TO + 6); X.closePath(); X.fill(); X.stroke();
+    if (k == 'capa_estrelada') { X.fillStyle = '#fff'; for (const [x, y] of [[-12, .3], [-18, .55], [-9, .7], [-22, .85], [-14, .1]]) { X.beginPath(); X.arc(x, -TO + (low + TO) * y, 1.4, 0, 7); X.fill(); } }
+    if (k == 'capa_gola') { X.fillStyle = C.a; X.beginPath(); X.moveTo(-SW * .7, -TO + 2); X.lineTo(-SW - 2, -TO - 17); X.lineTo(SW * .1, -TO - 13); X.lineTo(SW * .3, -TO + 2); X.closePath(); X.fill(); X.stroke(); }
+  } else if (k == 'cachecol') {
+    const pts = []; for (let i = 0; i <= 6; i++) { const u = i / 6; pts.push([-2 - u * (28 + sp * 5), -TO - 1 + u * 9 + Math.sin(tf * .25 - u * 4) * (2 + u * 5)]); }
+    for (const [w, c] of [[11, '#111'], [7, C.bc]]) { X.lineWidth = w; X.strokeStyle = c; X.beginPath(); pts.forEach(([x, y], i) => i ? X.lineTo(x, y) : X.moveTo(x, y)); X.stroke(); }
+  } else if (k == 'sobretudo') {
+    X.beginPath(); X.moveTo(-HW, -12); X.lineTo(-HW - 9 - sp * 2 - fl * .5, LEG * .58); X.lineTo(HW * .3, LEG * .52); X.lineTo(HW * .5, -6); X.closePath(); X.fill(); X.stroke();
+  } else if (k == 'cauda') {
+    for (const [w, c] of [[9, '#111'], [6, C.bc]]) { X.lineWidth = w; X.strokeStyle = c; X.beginPath(); X.moveTo(-HW + 2, -6); X.quadraticCurveTo(-HW - 22, 2 + fl, -HW - 26, -18 + fl * 2); X.stroke(); }
+    X.fillStyle = C.s2; X.beginPath(); X.arc(-HW - 26, -18 + fl * 2, 4, 0, 7); X.fill();
+  } else if (k == 'capuz') { X.beginPath(); X.ellipse(-7, -TO - 12, 12, 15, -.3, 0, 7); X.fill(); X.stroke(); }
+  else if (k == 'laminas') {
+    for (const [a, b] of [[[-SW - 4, -TO - 12], [SW - 2, -2]], [[SW, -TO - 12], [-SW - 4, -2]]]) { X.lineWidth = 6; X.strokeStyle = '#111'; X.beginPath(); X.moveTo(a[0], a[1]); X.lineTo(b[0], b[1]); X.stroke(); X.lineWidth = 3; X.strokeStyle = '#cfd8dc'; X.stroke(); X.fillStyle = '#2a2a48'; X.fillRect(a[0] - 3, a[1] - 3, 6, 6); }
+  } else if (k == 'fitas') {
+    for (const off of [0, 7]) { X.lineWidth = 4; X.strokeStyle = C.bc; X.beginPath(); for (let i = 0; i <= 8; i++) { const u = i / 8; X.lineTo(-HW - u * (30 + sp * 4), -TO * .25 - off + Math.sin(tf * .3 - u * 5 + off) * (2 + u * 6)); } X.stroke(); }
+  } else if (k == 'asas') {
+    X.fillStyle = C.bc; X.beginPath(); X.moveTo(-SW * .4, -TO + 4); X.lineTo(-SW - 22, -TO - 18); X.lineTo(-SW - 12, -TO + 4); X.lineTo(-SW - 18, -TO + 10); X.closePath(); X.fill(); X.stroke();
+  }
+  X.restore();
+}
+
+// Saia curta do manto (por cima do quadril, sem esconder os chutes), no referencial do corpo.
+function roupaSaia(O, C, HW) {
+  if (O.bk != 'manto') return;
+  const X = ctx; X.fillStyle = C.bc; X.strokeStyle = '#111'; X.lineWidth = 3;
+  X.beginPath(); X.moveTo(-HW - 3, -5); X.lineTo(HW + 3, -5); X.lineTo(HW + 8, 16); X.lineTo(-HW - 8, 16); X.closePath(); X.fill(); X.stroke();
+}
+
+// Ombreiras, cristais, pedras ou gola de pele (por cima do braço da frente), no ombro S.
+function ombros(O, C, S, SW, t) {
+  const k = O.sh; if (!k) return;
+  const X = ctx; X.save(); X.translate(S[0], S[1]); X.rotate(t * DG); X.strokeStyle = '#111'; X.lineWidth = 2.5; X.lineJoin = 'round';
+  if (k == 'ombreira1') { X.fillStyle = C.a; X.beginPath(); X.ellipse(SW * .45, 2, 9, 7, 0, 0, 7); X.fill(); X.stroke(); }
+  else if (k == 'armadura') { X.fillStyle = C.s2; for (const x of [-SW * .55, SW * .55]) { X.beginPath(); X.ellipse(x, 2, 11, 8, 0, Math.PI, 0); X.closePath(); X.fill(); X.stroke(); } }
+  else if (k == 'pedra') { X.fillStyle = '#8d8077'; for (const x of [-SW * .6, SW * .5]) { X.beginPath(); X.moveTo(x - 9, 5); X.lineTo(x - 6, -6); X.lineTo(x + 5, -8); X.lineTo(x + 10, 3); X.closePath(); X.fill(); X.stroke(); } }
+  else if (k == 'cristal') { X.fillStyle = '#e9fbff'; for (const [x, h] of [[SW * .2, 12], [SW * .55, 16], [SW * .85, 10]]) { X.beginPath(); X.moveTo(x - 4, 3); X.lineTo(x, -h); X.lineTo(x + 4, 3); X.closePath(); X.fill(); X.stroke(); } }
+  else if (k == 'pele') { X.fillStyle = '#6d4c41'; X.beginPath(); X.moveTo(-SW - 3, 3); for (let i = 0; i <= 8; i++) X.lineTo(-SW - 3 + i * (2 * SW + 6) / 8, i % 2 ? -6 : -2); X.lineTo(SW + 3, 5); X.closePath(); X.fill(); X.stroke(); }
+  X.restore();
+}
+
+// Extras do tronco (barriga, suspensórios, máscara de gás, frascos), no referencial do tronco.
+function roupaTronco(O, C, SW, HW, TO) {
+  const X = ctx; X.strokeStyle = '#111'; X.lineWidth = 2.5;
+  if (temEx(O, 'suspensorios')) { X.strokeStyle = C.a; X.lineWidth = 3; X.beginPath(); X.moveTo(-SW * .5, -TO - 1); X.lineTo(-HW * .4, -2); X.moveTo(SW * .5, -TO - 1); X.lineTo(HW * .6, -2); X.stroke(); }
+  if (temEx(O, 'mascara_gas')) { X.fillStyle = '#78909c'; X.strokeStyle = '#111'; X.lineWidth = 2; X.beginPath(); X.ellipse(SW * .35, -TO + 7, 6, 5, 0, 0, 7); X.fill(); X.stroke(); X.fillStyle = '#263238'; X.beginPath(); X.arc(SW * .35 + 3, -TO + 8, 2.5, 0, 7); X.fill(); }
+  if (temEx(O, 'frascos')) { for (const x of [-HW + 2, HW - 4]) { X.fillStyle = '#c6ff6a'; X.strokeStyle = '#111'; X.lineWidth = 1.6; X.fillRect(x, -10, 4, 9); X.strokeRect(x, -10, 4, 9); } }
+}
+function barriga(O, C, HW, TO) {
+  if (!temEx(O, 'barriga')) return;
+  const X = ctx; X.fillStyle = C.s; X.strokeStyle = '#111'; X.lineWidth = 3; X.beginPath(); X.ellipse(HW + 2, -TO * .3, 11, 15, 0, -Math.PI / 2, Math.PI / 2); X.fill(); X.stroke();
+}
+
+// Cards: a roupa do retrato usa as cores novas (o rosto não muda).
+function corCard(h) { const O = LOOK[h.n]; return O ? [O.s, O.a] : [h.c, h.a]; }
+document.querySelectorAll('#grid .card').forEach(b => { const i = +b.dataset.i, el = b.querySelector('.art'); if (el && H[i]) el.innerHTML = art(H[i], i); });
 </script>
 <script id="vg-controles">
 // ================= CONTROLES DE TOQUE E TELA DEITADA (Etapa 2) =================
@@ -1106,6 +1316,24 @@ if (mqRetrato.addEventListener) mqRetrato.addEventListener('change', aoGirar); e
     } catch (e) {}
   };
 }
+</script>
+<script id="vg-zoom">
+// ================= TRAVA DE ZOOM (iPad/iPhone) =================
+// O Safari dá zoom com dois toques rápidos ou com "pinça". Num jogo de luta isso tira os botões da tela.
+// Aqui: o segundo toque rápido não vira zoom, e a pinça é ignorada. Os botões do jogo continuam funcionando
+// (eles usam eventos de ponteiro, que não dependem disto). Campos de texto ficam de fora.
+(function () {
+  let ultimo = -1e9;
+  const campo = e => e.target && e.target.closest && e.target.closest('input,textarea');
+  document.addEventListener('touchend', e => {
+    const t = e.timeStamp;
+    if (t - ultimo < 350 && e.cancelable && !campo(e)) e.preventDefault();
+    ultimo = t;
+  }, { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches && e.touches.length > 1 && e.cancelable) e.preventDefault(); }, { passive: false });
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach(n => document.addEventListener(n, e => e.preventDefault(), { passive: false }));
+  document.addEventListener('dblclick', e => { if (!campo(e)) e.preventDefault(); }, { passive: false });
+})();
 </script>
 </body>
 </html>
