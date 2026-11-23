@@ -93,6 +93,12 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
 #game,#game *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #cv,.pad,.pad *{touch-action:none}
 </style>
+<style id="vg-voltar-css">
+/* Botão para voltar à tela de escolha do site (Vigilantes ou A Coroa do Fim) */
+.voltar{display:inline-block;margin:0 0 14px;font-family:Bangers,Impact,sans-serif;letter-spacing:.04em;font-size:20px;padding:6px 14px 4px;background:#ffd23f;color:#000;border:3px solid #000;box-shadow:4px 4px 0 #000;text-decoration:none;transform:rotate(-1.5deg)}
+.voltar:active{transform:scale(.96);box-shadow:1px 1px 0 #000}
+.voltar:focus-visible{outline:3px dashed #000;outline-offset:4px}
+</style>
 </head>
 <body>
 <main>
@@ -334,7 +340,7 @@ pr=[];fx=[];pt=[];bl=[];it=[];gw=[];pickStage();hs=0;slowT=0;tm=sty&&b?180:99;tf
 function over(t){st='over';$('#res').textContent=t;$('#rematch').textContent=sty||hd?'Tentar de novo':'Revanche';$('#fin').hidden=false;try{$('#fin').scrollIntoView({block:'nearest'})}catch(e){}}
 function tick(){
 if(st=='fight'){
-if(mt>0)mt--;else if(hs>0)hs--;else{
+if(mt>0)mt--;/*cf*/else if(cfCena());else if(hs>0)hs--;else{
 fs().forEach(f=>{if(f.hp>0&&run(f)){const o=/*cf*/md=='coroa'&&f!==P?cfAlvo(f):near(f,foes(f));if(o)step(f,o,inputFor(f))}});
 fs().forEach(f=>{if(f.slow>0)f.slow--});if(slowT>0)slowT--;
 pr.forEach(p=>{if(p.o.slow>0&&tf%p.o.sk)return;/*cf*/if(p.x0==null)p.x0=p.x;p.x+=p.vx;if(p.bomb){p.vy+=.45;p.y+=p.vy;if(p.y>=G-12){boom(p.x,p.o,22,90);p.dead=1;return}}else if(p.vy)p.y+=p.vy;if(p.bm&&(p.l2=(p.l2||0)+1)==30)p.vx*=-1;if(p.life&&--p.life<=0)p.dead=1;/*cf*/if(Math.abs(p.x-p.x0)>1000)p.dead=1;for(const o of foes(p.o)){if(o.hp<=0||p.dead)continue;
@@ -2553,7 +2559,11 @@ function cfStart(i, d, opt) {
   const ids = opt.herois || H.map((h, k) => k).filter(k => k != i).slice(0, 14); /*cf*/ // padrão que não é alcançado: cf-elenco sempre passa a lista dos 13 aliados do elenco
   P = mk(H[i], 600);
   AL = ids.map((k, n) => { const a = mk(H[k], ids.length > 1 ? 300 + n * 600 / (ids.length - 1) : 600); a.lv = Math.min(.85, .25 + dif * .2); return a; });
-  E = mk(BOSSES[0], W - 200); E.t = 1; E.hp = 0; E.gone = 1;
+  // o Ômega (cf-omega): ficha própria, fora de campo até a descida. A vida fica em 0 enquanto ele não está em campo (o medidor conta hp > 0)
+  const jo = CF_DIF(d);
+  E = mk(CF_OMEGA_H1, W - 200); E.t = 1; E.hp = 0; E.gone = 1;
+  E.max = CF_OMEGA.hp[jo]; E.bm = CF_OMEGA.bm[jo]; E.bcd = CF_OMEGA.bcd; E.lv = CF_OMEGA.lv[jo]; cfOmegaPoderes('f1');
+  CF.omega = opt.omega === true; CF.om = { fase: null, t: 0, cena: 0, barra: 0, chamaT: 0, coroa: 'base' }; // CF.retoma sobrevive (Tentar de novo)
   MN = []; pr = []; fx = []; pt = []; bl = []; it = []; gw = []; zn = [];
   pickStage(); hs = 0; slowT = 0; tm = 99; tf = 0; WN = null; LS = null; vt = 0; carry = null;
   CF.k = 0; CF.naveT = CF_NAVE.ini; CF.tiros = [];
@@ -2567,14 +2577,24 @@ function cfStart(i, d, opt) {
   CF.fila = []; CF.onda = 0; CF.ondaT = 0; CF.filaT = 0; CF.fk = 0; CF.fim = 0; CF.ban = { s: '', t: 0 };
   CF.cont = 0; cfCaidos = []; // cair e levantar (cf-levantar): contagem do jogador e lista dos caídos
   CF.fendaPend = CF.ato === 2 ? CF_FENDA.xs.length : 0;
-  if (CF.ato) cfAviso(CF_ATOS.atos[CF.ato].aviso);
+  // Tentar de novo (cf-omega): opt.trecho 'omega' (a descida) ou 'roubo' recomeça com o exército já zerado (ato 2, sem fendas) e a nave calada;
+  // a descida (ou, no 'roubo', a cena do salto) só vale a partir do quadro CF.om.ini
+  const tr = CF.omega && (opt.trecho === 'omega' || opt.trecho === 'roubo') ? opt.trecho : null;
+  if (tr) {
+    CF.ra = [0, 0, 0]; CF.res = 0; CF.ato = 2; CF.fendaPend = 0; CF.naveT = 1e9; CF.om.ini = 60; CF.retoma = tr;
+    if (tr === 'roubo') { // o Ômega já na fase 2, com a coroa, a 600 do jogador, com a vida no limite do roubo
+      E.gone = 0; E.x = P.x + 600; E.y = G; E.vx = 0; E.vy = 0; E.face = -1;
+      CF.om.coroa = 'omega'; cfOmegaFase2(); E.hp = cfOmegaLim();
+    }
+  } else if (CF.ato) cfAviso(CF_ATOS.atos[CF.ato].aviso);
   msg = 'A Coroa do Fim'; mt = 60; st = 'fight';
 }
 // fim com Derrota (nenhum herói de pé, ou a contagem do jogador caído acabou em cf-levantar)
 function cfPerde() { LS = P; WN = null; vt = 0; msg = 'Derrota'; mt = 230; st = 'end'; }
 // nenhum herói de pé (os filhotes não contam): Derrota na hora, sem esperar a contagem
 function cfSemHeroi() { if (![P, ...AL].every(a => a.hp <= 0)) return false; cfPerde(); return true; }
-// o maestro: mortos -> derrota -> levantar -> atos e fendas -> nave -> derrota de novo (o tiro da nave pode derrubar o último) -> aviso -> vitória.
+// o maestro: mortos -> derrota -> levantar -> atos e fendas -> nave -> Ômega -> derrota de novo (o tiro da nave ou o choque do Ômega pode
+// derrubar o último) -> aviso -> descida do Ômega (com CF.omega) ou vitória (sem).
 // Os inimigos nascem em cfAtosTick (cf-atos).
 function cfTick() {
   MN.forEach(m => {
@@ -2588,10 +2608,14 @@ function cfTick() {
   if (st !== 'fight') return;
   cfAtosTick();
   cfNaveTick();
+  cfOmegaTick();
   if (cfSemHeroi()) return;
   if (CF.ban.t > 0) CF.ban.t--;
-  // vitória: nada mais para nascer (total, fila, fendas por abrir) e ninguém vivo em MN (fenda aberta segura a vitória)
-  if (CF.res <= 0 && !CF.fila.length && !CF.fendaPend && !MN.some(m => m.hp > 0)) { for (const h of [P, ...AL]) if (h.caido) cfLevanta(h); WN = P; LS = null; vt = 0; msg = 'Vitória!'; mt = 230; st = 'end'; }
+  const acabou = CF.res <= 0 && !CF.fila.length && !CF.fendaPend; // nada mais para nascer (total, fila, fendas por abrir)
+  // com o Ômega (cf-omega): o exército quase no fim (no máximo CF_OMEGA.restam vivos em MN, fendas contam) ou os 9 minutos -> ele desce
+  if (CF.omega) { if (!CF.om.fase && tf >= (CF.om.ini || 0) && (CF.fim || (acabou && MN.filter(m => m.hp > 0).length <= CF_OMEGA.restam))) cfOmegaDesce(); }
+  // vitória sem o Ômega: ninguém vivo em MN (fenda aberta segura a vitória)
+  else if (acabou && !MN.some(m => m.hp > 0)) { for (const h of [P, ...AL]) if (h.caido) cfLevanta(h); WN = P; LS = null; vt = 0; msg = 'Vitória!'; mt = 230; st = 'end'; }
 }
 </script>
 <script id="cf-camera">
@@ -2742,11 +2766,11 @@ function cfContagem() {
   ctx.strokeText(f, VW / 2, 205); ctx.fillStyle = '#ffd23f'; ctx.fillText(f, VW / 2, 205);
   ctx.restore();
 }
-function cfHud() { if (md !== 'coroa' || !P) return; cfMapa(); cfBanner(); cfContagem(); cfMarcador(); if (!P.caido) cfDicaDesenha(); }
+function cfHud() { if (md !== 'coroa' || !P) return; cfMapa(); cfBanner(); cfContagem(); cfMarcador(); if (!P.caido && !(CF.om && CF.om.fase === 'roubo')) cfDicaDesenha(); } // no roubo a dica é a de cf-omega-desenho
 </script>
 <script id="cf-menu">
 // Fluxo da Coroa do Fim: botão BATALHA -> escolha do herói -> cfStart. Nada aqui cai num modo do Vigilantes.
-function cfAbrirBatalha() { md = 'coroa'; mp = 0; picks = []; who(); show('roster'); scrollTo(0, 0); }
+function cfAbrirBatalha() { md = 'coroa'; mp = 0; picks = []; CF.retoma = null; who(); show('roster'); scrollTo(0, 0); } // pelo menu: sempre do começo
 $('#cfbatalha').onclick = cfAbrirBatalha;
 // só Fácil, Médio e Difícil: esconde pelo texto do chip (não pela posição)
 function cfEscondeNiveis(chips) { chips.forEach(c => { c.hidden = !['Fácil', 'Médio', 'Difícil'].includes(c.textContent); }); }
@@ -2757,9 +2781,10 @@ who = function () {
   cfWho0();
   if (md === 'coroa') { $('#difrow').hidden = false; $('#who').textContent = 'Escolha seu herói para a batalha'; }
 };
-// começar e tentar de novo passam por round(): na Coroa isso é cfStart, com o herói e a dificuldade já escolhidos
+// começar e tentar de novo passam por round(): na Coroa isso é cfStart, com o herói e a dificuldade já escolhidos, sempre com o Ômega;
+// trecho = de onde recomeçar (CF.retoma, posto em cf-omega; nulo = do começo)
 const cfRound0 = round;
-round = function () { if (md === 'coroa') return cfStart(pi, dif); return cfRound0.apply(this, arguments); };
+round = function () { if (md === 'coroa') return cfStart(pi, dif, { omega: true, trecho: CF.retoma }); return cfRound0.apply(this, arguments); };
 const cfOver0 = over;
 over = function (t) { cfOver0(t); if (md === 'coroa') $('#rematch').textContent = 'Tentar de novo'; };
 </script>
@@ -4016,8 +4041,8 @@ function cfNovoInimigo(k, x, y) {
 ESTILO.Omeguinha = { k: 1.1, combo: ['jab'] }; SIG.Omeguinha = 'direto';
 ESTILO.Bruto = { k: 1.3, combo: ['c_bruto'] };
 MV.c_bruto = { alt: 'm', st: 16, ac: 5, rc: 24, rch: 100, dm: 1.4, kb: 12, ef: 'kd', adv: 1, an: 'martelo2', fx: 'BLAM!' };
-// armadura: golpe fraco (dano bruto menor que 12) tira vida mas não interrompe, não derruba, não empurra
-const cfArmadura = (o, d) => o.h.cfk === 'bruto' && d < CF_INI.bruto.armadura;
+// armadura: golpe fraco (dano bruto menor que 12; no Ômega, menor que CF_OMEGA.armadura, em cf-omega) tira vida mas não interrompe, não derruba, não empurra
+const cfArmadura = (o, d) => (o.h.cfk === 'bruto' && d < CF_INI.bruto.armadura) || (o.h.cfk === 'omega' && d < CF_OMEGA.armadura);
 const CF_ARM_CAMPOS = ['stun', 'vx', 'vy', 'at', 'mv', 'mt', 'mhs', 'dash', 'beam', 'dv', 'tq', 'axe', 'rl', 'ci'];
 const cfHit1 = hit;
 hit = function (o, d) {
@@ -4352,6 +4377,7 @@ function cfTiroCai(x) {
   }
 }
 function cfNaveTick() {
+  if (CF.om && CF.om.fase) return; // o Ômega desceu (cf-omega): a nave para de atirar
   const N = CF_NAVE, j = CF_DIF(dif);
   for (const t of CF.tiros) if (--t.t === 0) cfTiroCai(t.x); // o dano sai no quadro em que t chega a 0
   CF.tiros = CF.tiros.filter(t => t.t >= -N.fogo);
@@ -4663,6 +4689,895 @@ function cfTonto(f) {
     if (!(md === 'coroa' && gh && f && f.hp <= 0 && !f.cfFi && (f === P || AL.indexOf(f) >= 0))) return body0.apply(this, arguments);
     body0.call(this, f, 0);
     if (!((st === 'end' || st === 'acabe') && LS === f)) cfTonto(f); // o jogador que perdeu já tem a cena de fim do motor
+  };
+}
+</script>
+<script id="cf-omega">
+// O Ômega na batalha (etapa 4). Parte 1: com o exército quase no fim (ou aos 9 minutos) ele pula da nave, cai com a gravidade do motor,
+// intocável, solta uma onda de choque ao tocar o chão e luta contra todos (fase 1). Ele é o lutador E do motor (cfStart o cria fora de campo).
+// Simulação: só estado do jogo e tf (nenhum R() aqui; o sorteio do poder é o de special, no motor). Tabela única CF_OMEGA: ajuste de
+// equilíbrio é edição neste lugar. As fichas são cópias: BOSSES[0] (a folha e o Vigilantes usam) nunca muda.
+// CF.om.fase: null (na nave) | 'desce' | 'f1' | 'pega' | 'f2' | 'salta' | 'roubo' | 'fim'. Aqui entram 'desce', 'f1', a cena 'pega'
+// (cfCena: ele voa até a base e pega a coroa, com o resto parado), 'f2' (mais forte, chama Omeguinhas), a cena 'salta' (pula para perto
+// do jogador), o roubo (barra subindo; Especial perto dele arranca a coroa) e a cena 'fim' (final provisório e Vitória).
+const CF_OMEGA = { // por dificuldade: [Fácil, Médio, Difícil]
+  // hp, bm, bcd e alvos PROVISÓRIOS (Task 7; continuam para a etapa de equilíbrio, com medição no iPad): ajustados com o jogador simples
+  // dos testes (tests/coroa/partida.mjs: no Médio, 3 a 4 min de luta, e ele derruba heróis de verdade). Os 13 bots se amontoam no Ômega;
+  // por isso cada uso de poder de área dele (terremoto, investida, raio, chuva de meteoros, pilares) e a onda de choque da descida acertam
+  // no máximo alvos[dif] heróis/filhotes (os outros na área não levam dano): ele bate forte (bm) em poucos de cada vez, não fraco em
+  // todos. Soco e chute dele ficam fora desse teto, mas cada golpe corpo a corpo acerta só 1 herói (o mais perto à frente).
+  // Com o jogador caído, o Ômega larga quem está a menos de CF_LEV.dist + largaRaio dele (custo + larga na escolha de alvo) e vai
+  // atrás dos outros, para os amigos o levantarem. Fácil < Médio < Difícil, cada passo no máximo x1,5.
+  hp: [26000, 35000, 46000], bm: [1.1, 1.65, 2.4], alvos: [1, 2, 3], lv: [.5, .75, 1.0], bcd: 200, z: 1.9, armadura: 20, recuo: 12, restam: 6,
+  alturaNave: 320, choque: 12, raioChoque: 220, baseX: 150, vooQ: 100, pegaQ: 40, f2: { spd: 1.3, bm: 1.25, bcd: 150 },
+  chama: [720, 540, 420], bando: 3, roubo: .10, saltoDist: 300, alcance: 110, barra: [720, 600, 480], fimQ: 150,
+  trava: 14400, travaPorMin: .5, teto: 50400, larga: 1000, largaRaio: 60,
+};
+const CF_OMEGA_H1 = Object.assign({}, BOSSES[0], { cfk: 'omega', big: CF_OMEGA.z, hp: CF_OMEGA.hp[1] }); // a vida de verdade vem de CF_OMEGA.hp[dif]
+const CF_OMEGA_H2 = Object.assign({}, CF_OMEGA_H1, { spd: BOSSES[0].spd * CF_OMEGA.f2.spd });
+// poderes por fase: special do motor sorteia em E.pool (uma ficha por poder, feita uma vez e nunca mexida)
+const CF_OMEGA_SN = { stomp: 'TERREMOTO!', rush: 'INVESTIDA!', beam: 'RAIO!', meteor: 'CHUVA DE METEOROS!', pillars: 'PILARES!' };
+const cfOmegaFicha = {};
+function cfOmegaPoderes(fase) {
+  const ks = fase === 'f2' ? ['stomp', 'rush', 'beam', 'meteor', 'pillars'] : ['stomp', 'rush', 'beam'];
+  E.pool = ks.map(sp => cfOmegaFicha[sp] || (cfOmegaFicha[sp] = Object.assign({}, BOSSES[0], { sp, sn: CF_OMEGA_SN[sp] })));
+  return E.pool;
+}
+// o Ômega em campo, na Coroa
+const cfOmegaEm = () => md === 'coroa' && E && !E.gone && E.h.cfk === 'omega' && CF.om && !!CF.om.fase;
+// ele pula da nave: no ar embaixo dela, vida cheia; a nave para (os tiros avisados somem) e "Tentar de novo" passa a recomeçar daqui
+function cfOmegaDesce() {
+  E.gone = 0; E.hp = E.max; E.x = cfNaveX(tf); E.y = G - CF_OMEGA.alturaNave; E.vx = 0; E.vy = 0; E.gu = 2;
+  CF.om.fase = 'desce'; CF.tiros = []; CF.retoma = 'omega';
+}
+// onda de choque ao tocar o chão: heróis e filhotes perto apanham e são empurrados. cur = null (o bm do Ômega não multiplica) e sem a guarda
+// comum do motor, como o tiro da nave. Teto de alvos (CF_OMEGA.alvos): só os mais perto dele apanham
+function cfOmegaChoque() {
+  const O = CF_OMEGA;
+  X({ type: 'ring', x: E.x, y: G - 6, c: '#c1121f', R: O.raioChoque * 1.4, t: 22, m: 22, gr: 1 });
+  shake = Math.max(shake, cfSk(18, E.x));
+  const perto = [P, ...AL, ...CFA].filter(h => h.hp > 0 && Math.abs(h.x - E.x) < O.raioChoque && !invencivel(h))
+    .sort((a, b) => Math.abs(a.x - E.x) - Math.abs(b.x - E.x)).slice(0, O.alvos[CF_DIF(dif)]);
+  for (const h of perto) {
+    const bk = h.bk;
+    h.bk = 0; cur = null;
+    hit(h, O.choque, (h.x >= E.x ? 1 : -1) * 12, 3);
+    h.bk = bk;
+    if (h.cfFi && h.hp <= 0 && !h.dead) { h.dead = 1; h.dt = 30; } // filhote some girando, como no tiro da nave
+  }
+}
+// limite da vida na fase: na fase 1 (e na cena 'pega') nunca abaixo da metade; depois, nunca abaixo de CF_OMEGA.roubo. Um golpe enorme
+// nunca pula a fase nem chega a 0
+function cfOmegaLim() { const f = CF.om.fase; return Math.round(E.max * (f === 'f1' || f === 'pega' || f === 'desce' ? .5 : CF_OMEGA.roubo)); }
+function cfOmegaLimite() { if (cfOmegaEm()) { const l = cfOmegaLim(); if (E.hp < l) E.hp = l; } }
+// a luta não trava: depois de CF_OMEGA.trava quadros de luta, o dano dos heróis no Ômega cresce travaPorMin por minuto a mais
+function cfOmegaMult() { const O = CF_OMEGA, t = CF.om ? CF.om.t : 0; return t > O.trava ? 1 + O.travaPorMin * (t - O.trava) / 3600 : 1; }
+// chamado por cfTick depois de cfNaveTick (não roda com o jogo congelado: CF.om.t só conta luta de verdade)
+function cfOmegaTick() {
+  const om = CF.om;
+  if (!om || !om.fase) return;
+  if (om.fase === 'desce') {
+    if (E.y < G) { E.gu = Math.max(E.gu, 2); return; } // intocável na queda
+    E.gu = 0; cfOmegaChoque();
+    om.fase = 'f1'; cfAviso('O ÔMEGA DESCEU!');
+    return;
+  }
+  if (om.fase === 'f1' || om.fase === 'f2') om.t++;
+  cfOmegaLimite(); // veneno, zonas e poços tiram vida sem passar por hit
+  if (tf >= CF_OMEGA.teto && (om.fase === 'f1' || om.fase === 'f2') && E.hp > cfOmegaLim()) E.hp = cfOmegaLim(); // teto de 14 min: a luta não passa daqui
+  if (om.fase === 'f2' && tf <= (om.ini || 0)) E.hp = Math.min(E.hp, cfOmegaLim()); // espera do roubo recomeçado: a recuperação do motor (+.07 por quadro) não tira a vida do limite, e o salto sai no quadro ini mesmo sem golpe
+  if (om.fase === 'f1' && E.hp <= cfOmegaLim()) cfOmegaPega();
+  else if (om.fase === 'f2') { if (E.hp <= cfOmegaLim()) { if (tf >= (om.ini || 0)) cfOmegaSalta(); } else cfOmegaChama(); } // ini: o roubo recomeçado espera o quadro 60
+  else if (om.fase === 'roubo' && ++om.barra >= CF_OMEGA.barra[CF_DIF(dif)]) cfRouboPerde();
+  if (om.fase === 'salta' || om.fase === 'roubo' || om.fase === 'fim' || (om.fase === 'f2' && tf < (om.ini || 0))) E.gu = Math.max(E.gu, 2); // parado e intocável (no roubo recomeçado, também até o quadro ini)
+}
+// começo de uma cena: para o que o Ômega estava fazendo (golpe, raio, investida), fica intocável e guarda de onde sai o voo
+// (o resto do jogo fica parado em cfCena)
+const CF_OMEGA_ARCO = 260; // altura do arco do voo, acima da reta entre a partida e o chão do destino
+// falas (fx, só desenho): y no mínimo abaixo da faixa do HUD (barras, mapinha e dica vão até ~140 na tela); a do jogador fica abaixo da
+// coroa erguida (cf-omega-desenho), que ocupa a faixa logo acima da cabeça dele
+const CF_OMEGA_FALA = [190, 245];
+const CF_OMEGA_SALTO = 45; // quadros da cena 'salta' (no máximo 60)
+function cfOmegaPara() {
+  E.vx = 0; E.vy = 0; E.stun = 0; E.at = 0; E.fl = 0; E.rl = 0; E.mv = null; E.dash = 0; E.beam = 0; E.gu = 2;
+  E.cfX0 = E.x; E.cfY0 = E.y;
+}
+function cfOmegaPega() {
+  const om = CF.om;
+  om.fase = 'pega'; om.cena = CF_OMEGA.vooQ + CF_OMEGA.pegaQ;
+  cfOmegaPara();
+}
+// voo em arco da partida (cfX0, cfY0) até (x, chão): p = fração do voo (1/Q no primeiro quadro, 1 no último)
+function cfOmegaArco(p, x) {
+  E.x = E.cfX0 + (x - E.cfX0) * p;
+  E.y = E.cfY0 + (G - E.cfY0) * p - CF_OMEGA_ARCO * Math.sin(Math.PI * p);
+  E.face = x < E.cfX0 ? -1 : 1;
+}
+// a cena (ligação /*cf*/ em tick, antes de hs): devolve true e anda a cena enquanto ela dura; o resto do jogo não anda (tf também não).
+// Só mexe em E, em CF.om e (na 'fim') na contagem de sumiço dos inimigos derrotados. Fora da Coroa ou sem cena: false (o Vigilantes não muda)
+// - 'pega': vooQ quadros em arco até CF_OMEGA.baseX, chegando ao chão; depois pegaQ quadros parado lá, com a coroa na cabeça desde o primeiro
+// - 'salta': CF_OMEGA_SALTO quadros em arco até E.cfX1 (a saltoDist do jogador); depois, o roubo
+// - 'fim': fimQ quadros; os inimigos giram e somem (dt, como em cfTick); depois, a Vitória
+function cfCena() {
+  if (md !== 'coroa' || !CF.om || !(CF.om.cena > 0)) return false;
+  const om = CF.om, O = CF_OMEGA, k = om.cena;
+  if (om.fase === 'pega') {
+    if (k > O.pegaQ) cfOmegaArco((O.vooQ - (k - O.pegaQ) + 1) / O.vooQ, O.baseX);
+    else {
+      E.x = O.baseX; E.y = G;
+      if (k === O.pegaQ) { om.coroa = 'omega'; cfAviso('O ÔMEGA PEGOU A COROA!'); }
+    }
+    if (--om.cena === 0) cfOmegaFase2();
+  } else if (om.fase === 'salta') {
+    cfOmegaArco((CF_OMEGA_SALTO - k + 1) / CF_OMEGA_SALTO, E.cfX1);
+    if (--om.cena === 0) cfOmegaRoubo();
+  } else {
+    for (const m of MN) if (m.dead && m.dt > 0 && --m.dt === 0) m.gone = 1;
+    if (--om.cena === 0) cfOmegaVence();
+  }
+  return true;
+}
+// fase 2: ficha H2 (mais rápido), cinco poderes, mais dano, recarga menor; volta a ser tocável. A chamada de Omeguinhas conta do zero
+function cfOmegaFase2() {
+  const om = CF.om;
+  om.fase = 'f2'; om.chamaT = 0;
+  E.h = CF_OMEGA_H2; cfOmegaPoderes('f2');
+  E.bm = CF_OMEGA.bm[CF_DIF(dif)] * CF_OMEGA.f2.bm; E.bcd = CF_OMEGA.f2.bcd; E.gu = 0;
+}
+// a cada CF_OMEGA.chama[dif] quadros de fase 2, CF_OMEGA.bando Omeguinhas descem ao lado dele (até 150 de E.x), respeitando o teto CF.cap.en
+function cfOmegaChama() {
+  const om = CF.om;
+  if (++om.chamaT < CF_OMEGA.chama[CF_DIF(dif)]) return;
+  om.chamaT = 0;
+  let vivos = 0;
+  for (const m of MN) if (m.hp > 0) vivos++;
+  for (let n = 0; n < CF_OMEGA.bando && vivos < CF.cap.en; n++, vivos++)
+    cfNovoInimigo('omeguinha', Math.max(60, Math.min(3940, E.x + (R() * 2 - 1) * 150)), G - CF_NAVE.desce);
+}
+// ---------------------------------------------------------------- o roubo da Coroa (Decisão 7) e o final provisório (Decisão 8)
+// onde o Ômega cai: a saltoDist do jogador (do x dele, mesmo no ar), do lado com mais espaço, dentro de 100..3900 (o jogador sempre chega)
+function cfOmegaSaltoX() {
+  const d = CF_OMEGA.saltoDist;
+  return Math.max(100, Math.min(3900, P.x >= cfWm / 2 ? P.x - d : P.x + d));
+}
+// limite da fase 2: começa a cena 'salta' (corta o golpe ou raio em andamento, como na 'pega'); o destino sai da posição do jogador agora
+function cfOmegaSalta() {
+  const om = CF.om;
+  om.fase = 'salta'; om.cena = CF_OMEGA_SALTO;
+  cfOmegaPara();
+  E.cfX1 = cfOmegaSaltoX();
+}
+// fim do salto: começa o roubo. O Ômega fica parado e intocável, com a fala sobre ele; a barra começa do zero; todos os caídos se levantam
+// (a contagem do jogador some) e "Tentar de novo" passa a recomeçar daqui
+function cfOmegaRoubo() {
+  const om = CF.om;
+  om.fase = 'roubo'; om.barra = 0; CF.retoma = 'roubo';
+  E.x = E.cfX1; E.y = G; E.vy = 0; E.gu = 2; E.face = P.x >= E.x ? 1 : -1;
+  for (const h of [P, ...AL]) if (h.caido) cfLevanta(h);
+  CF.cont = 0;
+  X({ type: 'txt', x: E.x, y: Math.max(CF_OMEGA_FALA[0], E.y - 150 * E.z), s: 'Tudo chega a mim.', c: '#ff5a5a', t: 180, m: 180, sz: 30 });
+}
+// barra cheia antes de o jogador arrancar a coroa: Derrota
+function cfRouboPerde() { cfPerde(); }
+// o jogador arrancou a coroa (Especial no alcance, em inputFor): começa a cena 'fim'. A coroa vai para a mão dele, com o balão; o Ômega para
+// e os inimigos começam a girar e sumir (derrotados aqui mesmo, sem contar abate nem soltar item; a fenda some na hora)
+function cfArranca() {
+  const om = CF.om;
+  om.fase = 'fim'; om.cena = CF_OMEGA.fimQ; om.coroa = 'p';
+  cfOmegaPara();
+  for (const m of MN) if (m.hp > 0 || !m.dead) { m.hp = 0; m.dead = 1; m.dt = 30; if (m.h.cfk === 'fenda') m.gone = 1; }
+  X({ type: 'txt', x: P.x, y: Math.max(CF_OMEGA_FALA[1], P.y - 150 * P.z), s: 'E quem disse que é você?', c: '#ffd23f', t: CF_OMEGA.fimQ + 60, m: CF_OMEGA.fimQ + 60, sz: 30 }); // fx anda mesmo na cena: dura a cena toda
+}
+// fim da cena 'fim': o Ômega e os inimigos já sumiram; Vitória (como a vitória antiga de cfTick)
+function cfOmegaVence() {
+  E.gone = 1; E.hp = 0;
+  MN = [];
+  for (const h of [P, ...AL]) if (h.caido) cfLevanta(h);
+  WN = P; LS = null; vt = 0; msg = 'Vitória!'; mt = 230; st = 'end';
+  CF.retoma = null; // ganhou: "Tentar de novo" é uma partida nova, não o roubo
+}
+// no roubo (e no quadro em que ele termina) a vida do jogador não passa abaixo de 1: ele não pode cair
+const cfOmegaTrava = () => md === 'coroa' && CF.om && (CF.om.fase === 'roubo' || CF.om.fase === 'fim');
+function cfOmegaVida1() { if (cfOmegaTrava() && P.hp < 1 && !P.caido) P.hp = 1; }
+// teto de alvos dos poderes do Ômega (CF_OMEGA.alvos). Um "uso" nasce a cada special do Ômega: E.cfUso = { alvos: [] } (os heróis/filhotes
+// que esse uso já acertou). O terremoto acerta dentro do próprio special; a investida e o raio acertam depois, nos passos dele (cfOmPasso),
+// e contam no uso corrente; os blocos da chuva de meteoros e dos pilares guardam o uso em que nasceram (b.cfUso, marcado logo depois de
+// special e de cada passo dele) e, quando caem (no laço de bl, cur = E e b.t === 8), contam nesse uso, mesmo que outro já tenha começado.
+// Quem o uso já acertou continua apanhando (raio contínuo, meteoros seguidos): o teto é de heróis, não de golpes. Soco e chute (acerta,
+// corpo a corpo: cfOmCorpo) ficam fora. Tudo determinístico: a ordem de quem pega é a do motor.
+let cfOmPasso = 0, cfOmCorpo = 0;
+function cfOmegaMarca() { for (const b of bl) if (b.o === E && !b.cfUso) b.cfUso = E.cfUso; }
+// true: o golpe do Ômega em o não pega (o uso já acertou alvos[dif] outros); senão, o entra na conta do uso
+function cfOmegaTeto(o) {
+  if (cfOmCorpo || invencivel(o)) return false;
+  let u = E.cfUso;
+  if (!cfOmPasso) { const b = bl.find(b => b.o === E && b.t === 8 && b.cfUso); if (b) u = b.cfUso; }
+  if (!u || u.alvos.includes(o)) return false;
+  if (u.alvos.length >= CF_OMEGA.alvos[CF_DIF(dif)]) return true;
+  u.alvos.push(o);
+  return false;
+}
+{
+  const special0 = special, acerta0 = acerta;
+  special = function (f) {
+    if (f !== E || !cfOmegaEm()) return special0.apply(this, arguments);
+    E.cfUso = { alvos: [] };
+    const r = special0.apply(this, arguments);
+    cfOmegaMarca();
+    return r;
+  };
+  // soco e chute do Ômega: cada golpe acerta no máximo 1 herói, o mais perto à frente (golpe de área: de qualquer lado). Os outros
+  // entram na lista de "já acertados" do golpe (f.mhs) antes do motor olhar; se o escolhido ainda não está no alcance, saem de novo
+  // (no quadro seguinte a escolha é refeita); se ele foi acertado, ficam até o golpe acabar (ou até a próxima repetição, que zera f.mhs)
+  acerta = function (f, m) {
+    if (f !== E || !cfOmegaEm()) return acerta0.apply(this, arguments);
+    const L = f.mhs || (f.mhs = []), l = foes(f), pos = [];
+    let b = null;
+    if (!l.some(v => L.includes(v))) {
+      for (const v of l) if (!invencivel(v) && (m.area || (v.x - f.x) * f.face >= -12) && (!b || Math.abs(v.x - f.x) < Math.abs(b.x - f.x))) b = v;
+    }
+    for (const v of l) if (v !== b && !L.includes(v)) { L.push(v); pos.push(v); }
+    cfOmCorpo = 1;
+    try { return acerta0.apply(this, arguments); } finally {
+      cfOmCorpo = 0;
+      if (!(b && L.includes(b))) f.mhs = L.filter(v => !pos.includes(v));
+    }
+  };
+}
+// golpes no Ômega: anti-trava (golpe que não vem do time 1; cur nulo conta como herói), golpe forte só faz recuar e o limite da fase.
+// Golpes do Ômega: o teto de alvos dos poderes
+{
+  const hit0 = hit;
+  hit = function (o) {
+    if (cur === E && o !== E && cfOmegaEm() && cfOmegaTeto(o)) return; // o uso deste poder já acertou o teto de heróis
+    if (o === P && cfOmegaTrava()) { const r = hit0.apply(this, arguments); cfOmegaVida1(); return r; } // no roubo o jogador não cai
+    if (o !== E || !cfOmegaEm()) return hit0.apply(this, arguments);
+    const hp0 = o.hp, r = hit0.apply(this, arguments), m = cfOmegaMult();
+    if (m > 1 && o.hp < hp0 && !(cur && cur.t == 1)) o.hp -= (hp0 - o.hp) * (m - 1);
+    if (r) { o.stun = Math.min(o.stun, CF_OMEGA.recuo); o.kd = 0; o.lch = 0; o.vy = 0; o.cfOmQ = tf; }
+    o.cfAbs = r ? 1 : 0; // acerta (motor) lê isto e pula derrubar, lançar, segurar e puxar
+    cfOmegaLimite();
+    return r;
+  };
+}
+// antes do passo: o que um poder pôs depois do golpe (derrubar, lançar para cima, atordoar longe) não vale; na queda e na troca de fase, parado
+{
+  const step0 = step, inputFor0 = inputFor;
+  step = function (f) {
+    if (f === E && cfOmegaEm() && CF.om.fase !== 'desce') {
+      f.kd = 0; f.lch = 0;
+      if (f.stun > CF_OMEGA.recuo) f.stun = CF_OMEGA.recuo;
+      if (f.vy < 0 && f.cfOmQ >= tf - 1) f.vy = 0;
+    }
+    if (f !== E || !cfOmegaEm()) return step0.apply(this, arguments);
+    cfOmPasso = 1; // teto de alvos: golpes de poder neste passo contam no uso corrente; meteoros novos levam o uso
+    try { return step0.apply(this, arguments); } finally { cfOmPasso = 0; cfOmegaMarca(); }
+  };
+  inputFor = function (f) {
+    if (f === E && cfOmegaEm() && ((CF.om.ini && tf < CF.om.ini) || CF.om.fase === 'desce' || CF.om.fase === 'pega' || CF.om.fase === 'salta' || CF.om.fase === 'roubo' || CF.om.fase === 'fim')) return {};
+    return inputFor0.apply(this, arguments);
+  };
+}
+// no roubo: Especial do jogador a até CF_OMEGA.alcance do Ômega arranca a coroa. Vale sem carga, em poder ou defendendo (a entrada é lida
+// antes de step, que é quem olharia isso); o Especial é consumido: a entrada volta sem s, e special não roda neste quadro
+{
+  const inputFor0 = inputFor;
+  inputFor = function (f) {
+    const i = inputFor0.apply(this, arguments);
+    if (f === P && i && i.s && cfOmegaEm() && CF.om.fase === 'roubo' && Math.abs(P.x - E.x) <= CF_OMEGA.alcance) {
+      cfArranca();
+      return Object.assign({}, i, { s: 0 });
+    }
+    return i;
+  };
+}
+// no roubo todos do time dos heróis (bots e filhotes) miram o Ômega, mesmo com inimigos mais perto
+{
+  const cfAlvo0 = cfAlvo;
+  cfAlvo = function (f) {
+    if (cfOmegaEm() && CF.om.fase === 'roubo' && cfTime(f) === 0) { f.alvo = E; return E; }
+    if (f === E && cfOmegaEm() && P.caido) return cfOmegaLarga();
+    return cfAlvo0.apply(this, arguments);
+  };
+}
+// jogador caído: o Ômega escolhe de novo a cada quadro, pela distância, com custo CF_OMEGA.larga para quem está a menos de
+// CF_LEV.dist + largaRaio do jogador (os ajudantes); "o chefe larga o caído e vai atrás dos outros"
+function cfOmegaLarga() {
+  const r = CF_LEV.dist + CF_OMEGA.largaRaio;
+  let best = null, bc = 0;
+  for (const c of foes(E)) {
+    const custo = Math.abs(c.x - E.x) + (Math.abs(c.x - P.x) < r ? CF_OMEGA.larga : 0);
+    if (!best || custo < bc) { best = c; bc = custo; }
+  }
+  E.alvo = best; E.alvoQ = cfQ;
+  return best;
+}
+// dano que não passa por hit (veneno, zonas, golpe refletido): cfSemHeroi é o primeiro olhar de cfTick, antes de cfLevTick marcar o caído
+{
+  const semHeroi0 = cfSemHeroi;
+  cfSemHeroi = function () { cfOmegaVida1(); return semHeroi0.apply(this, arguments); };
+}
+// anzol, rede e raízes no Ômega: só o dano (os golpes são fracos e a armadura segura); não puxam nem prendem, como na fenda
+function cfOmegaGuarda() { return cfOmegaEm() ? { x: E.x, vx: E.vx, vy: E.vy } : null; }
+function cfOmegaSolta(s) {
+  if (!s) return;
+  E.x = s.x; E.vx = s.vx; E.vy = s.vy; E.cfPreso = E.cfRede = E.cfRaiz = 0; E.cfPor = null;
+  cfOb = cfOb.filter(b => b.alvo !== E); // a linha do anzol não fica presa nele
+}
+{
+  const linha0 = CF_PODER.linha, raizes0 = CF_PODER.raizes, rede0 = cfRedeCai;
+  CF_PODER.linha = function () { const s = cfOmegaGuarda(); linha0.apply(this, arguments); cfOmegaSolta(s); };
+  CF_PODER.raizes = function () { const s = cfOmegaGuarda(); raizes0.apply(this, arguments); cfOmegaSolta(s); };
+  cfRedeCai = function () { const s = cfOmegaGuarda(), r = rede0.apply(this, arguments); cfOmegaSolta(s); return r; };
+}
+</script>
+<script id="cf-omega-desenho">
+// Desenho da etapa do Ômega: a Coroa do Fim (no pedestal da base, na cabeça do Ômega, descendo no roubo, erguida sobre o jogador no fim),
+// a barra do Ômega, a barra do roubo com a dica, a seta para o Ômega fora da tela, a câmera nas cenas, o "POW!" do golpe forte nele e o
+// Ômega girando e sumindo numa nuvem no final. SÓ DESENHO: lê o estado (CF.om, E, P, tf), nunca o altera e nunca chama R().
+// Brilho = forma translúcida desenhada a mais (sem sombra borrada nem filtro). O corpo do Ômega continua o do Vigilantes (BOSSES[0]).
+// cabeca, mao: alturas (× z do lutador) acima dos pés; sobe: quanto a coroa desce no roubo; teto: fundo da faixa do HUD na tela (barras,
+// mapinha e dica do roubo vão até ~134): a coroa sobre o Ômega nunca sobe acima dele; fim: escala da coroa erguida pelo jogador (× P.z)
+const CF_COROA = { cabeca: 128, esc: .8, sobe: 50, mao: 150, pedestal: 70, teto: 140, fim: 1.6 };
+const CF_ZOOM_CENA = .6; // nas cenas 'pega' e 'salta' a câmera recua até este zoom para o voo em arco do Ômega caber na tela
+const CF_OMB = { x: 300, y: 66, w: 400, h: 12 }; // barra do Ômega: centralizada embaixo do mapinha (CF_MAPA vai de 300 a 700, até y 56)
+const CF_RBB = { x: 300, y: 88, w: 400, h: 10 }; // barra do roubo, logo abaixo
+const CF_POW = 16; // quadros que o "POW!" do golpe forte no Ômega fica na tela
+const CF_OMEGA_SOME = 90; // quadros da cena 'fim' em que o Ômega gira e some (a cena tem CF_OMEGA.fimQ)
+// bolinhas vermelhas das três pontas [x, y, raio], relativas à base da coroa. Vão num caminho só: cada arco começa e termina num ponto
+// da reta y = CF_COROA_LINHA, então as ligações entre eles ficam numa reta, sem área, e não pintam nada (economiza moveTo)
+const CF_COROA_LINHA = -20.5;
+const CF_COROA_BOLAS = [[-12.8, -18, 3.2], [0, -23.5, 4], [12.8, -18, 3.2]].map(([x, y, r]) => [x, y, r, Math.asin((CF_COROA_LINHA - y) / r)]);
+// a Coroa: base em (x, y), escala s. Corpo dourado arredondado em baixo, três pontas, contorno escuro e bolinhas vermelhas. 13 chamadas
+// (save/restore daria 15, acima do teto de 14): deixa fillStyle, strokeStyle e lineWidth mudados; quem desenha depois põe o seu estilo
+function cfDesCoroa(x, y, s) {
+  const X = ctx;
+  X.lineJoin = 'round'; X.lineWidth = 2.5 * Math.min(1.4, Math.max(.6, s)); X.strokeStyle = '#4a3000'; X.fillStyle = '#ffd23f';
+  // a curva de baixo vai da ponta direita (12.8, -16.8) à esquerda passando pelo fundo; as linhas fazem os vales e a ponta do meio
+  X.beginPath(); X.ellipse(x, y - 11 * s, 15 * s, 11 * s, 0, -.55, Math.PI + .55);
+  X.lineTo(x - 5.5 * s, y - 10 * s); X.lineTo(x, y - 25 * s); X.lineTo(x + 5.5 * s, y - 10 * s); X.closePath();
+  X.fill(); X.stroke();
+  X.fillStyle = '#e0002a'; X.beginPath();
+  for (const [bx, by, r, a] of CF_COROA_BOLAS) X.arc(x + bx * s, y + by * s, r * s, a, a + 2 * Math.PI);
+  X.fill();
+  X.lineJoin = 'miter';
+}
+// brilho em volta da coroa: círculo dourado translúcido (pulsa com p)
+function cfCoroaBrilho(x, y, s, p) {
+  ctx.fillStyle = 'rgba(255,210,63,.3)'; ctx.beginPath(); ctx.arc(x, y - 12 * s, (24 + 3 * Math.sin(p * .12)) * s, 0, 7); ctx.fill();
+}
+// pedestal de pedra da base: tampo, coluna e pé (num caminho só)
+function cfDesPedestal(x) {
+  const X = ctx, h = CF_COROA.pedestal;
+  X.fillStyle = '#8d8f94'; X.strokeStyle = '#10252b'; X.lineWidth = 3; X.beginPath();
+  X.rect(x - 20, G - h + 10, 40, h - 18); X.rect(x - 32, G - h, 64, 12); X.rect(x - 28, G - 10, 56, 10);
+  X.fill(); X.stroke();
+}
+// no começo do mundo (atrás dos lutadores): o pedestal e, enquanto ninguém a pegou, a coroa nele
+function cfPedestalMundo() {
+  const bx = CF_OMEGA.baseX;
+  if (!cfVe(bx, 80)) return;
+  cfDesPedestal(bx);
+  if (CF.om.coroa !== 'base') return;
+  const y = G - CF_COROA.pedestal, s = 1.4;
+  cfCoroaBrilho(bx, y, s, tf); cfDesCoroa(bx, y, s);
+}
+// menor y (mundo) da base de uma coroa de escala s para o topo dela (28*s acima da base) ficar abaixo de CF_COROA.teto na tela.
+// Tela: y_tela = G + (y - G) * cfCam.z (o chão fica fixo, cf-camera)
+function cfCoroaYmin(s) { return G - (G - CF_COROA.teto) / cfCam.z + 28 * s; }
+// no fim do mundo (na frente dos lutadores): a coroa na cabeça do Ômega, descendo no roubo, ou erguida sobre o jogador no fim
+function cfCoroaMundo() {
+  const om = CF.om;
+  if (om.coroa === 'omega' && !E.gone && cfVe(E.x, 80)) {
+    const s = CF_COROA.esc * E.z, topo = Math.max(E.y - CF_COROA.cabeca * E.z, cfCoroaYmin(s)); // na cabeça, mas nunca dentro do HUD
+    if (om.fase !== 'roubo') return cfDesCoroa(E.x, topo, s);
+    // no roubo ela flutua acima da cabeça e desce conforme a barra enche (cheia = no fim da descida: a cabeça, ou abaixo do HUD
+    // quando a cabeça está atrás dele; a descida de CF_COROA.sobe sempre aparece)
+    const fim = Math.max(topo, cfCoroaYmin(s) + CF_COROA.sobe);
+    const y = fim - CF_COROA.sobe * (1 - Math.min(1, om.barra / CF_OMEGA.barra[CF_DIF(dif)]));
+    cfCoroaBrilho(E.x, y, s, tf); cfDesCoroa(E.x, y, s);
+  } else if (om.coroa === 'p' && cfVe(P.x, 80)) {
+    const s = CF_COROA.fim * P.z, y = Math.max(cfCoroaYmin(s), P.y - CF_COROA.mao * P.z - Math.sin(om.cena * .15) * 3); // tf não anda na cena: o balanço vem de om.cena
+    cfCoroaBrilho(P.x, y, s, om.cena); cfDesCoroa(P.x, y, s);
+  }
+}
+// "POW!" do golpe forte no Ômega: a armadura faz o motor pular o texto do golpe. Lê só marcas que a simulação já grava: cfOmQ (quadro de
+// todo golpe que pegou, cf-omega) e cfArmT (quadro do golpe fraco que a armadura segurou, cf-inimigos). Forte = cfOmQ sem cfArmT igual
+function cfPowOmega() {
+  const f = CF.om.fase, d = tf - E.cfOmQ;
+  if ((f !== 'f1' && f !== 'f2') || !(d >= 0 && d < CF_POW) || E.cfArmT === E.cfOmQ || !cfVe(E.x, 80)) return;
+  const X = ctx, u = d / CF_POW, x = E.x - (E.face || 1) * 24, y = E.y - 100 * E.z - u * 18;
+  X.save(); X.globalAlpha = 1 - u * .6;
+  X.font = Math.round(30 + 12 * (1 - u)) + 'px Bangers,Impact,sans-serif'; X.textAlign = 'center'; X.lineJoin = 'round';
+  X.lineWidth = 6; X.strokeStyle = '#10252b'; X.strokeText('POW!', x, y);
+  X.fillStyle = '#ffd23f'; X.fillText('POW!', x, y);
+  X.restore();
+}
+{
+  const mundo0 = cfMundo;
+  cfMundo = function (on) {
+    const vale = md === 'coroa' && P && CF.omega && CF.om;
+    if (!on && vale) { cfCoroaMundo(); if (cfOmegaEm()) cfPowOmega(); }
+    const r = mundo0.apply(this, arguments);
+    if (on && vale) cfPedestalMundo();
+    return r;
+  };
+}
+// cena 'fim': o Ômega gira, encolhe e some numa nuvem (como cfSome dos inimigos), pelo andamento da cena (om.cena; tf não anda nela)
+{
+  const body0 = body;
+  body = function (f) {
+    if (f !== E || md !== 'coroa' || !CF.om || CF.om.fase !== 'fim') return body0.apply(this, arguments);
+    const u = (CF_OMEGA.fimQ - CF.om.cena) / CF_OMEGA_SOME, q = Math.min(1, u), z = f.z || 1, cy = f.y - 60 * z, X = ctx;
+    if (q < 1) {
+      const e = 1 - .8 * q;
+      X.save(); X.globalAlpha = 1 - .7 * q;
+      X.translate(f.x, cy); X.rotate(q * 4 * Math.PI); X.scale(e, e); X.translate(-f.x, -cy);
+      body0.apply(this, arguments);
+      X.restore();
+    }
+    const dt = 30 * (1 - u); // a nuvem de cfSome: cresce nos últimos 14 de 30 e se apaga logo depois
+    if (dt > 14 || dt <= -3) return;
+    const r = (5 + (14 - dt) * 1.3) * z;
+    X.save(); X.globalAlpha = .9 * Math.min(1, (dt + 3) / 9);
+    X.fillStyle = '#e9ecef'; X.strokeStyle = '#cfd4da'; X.lineWidth = 2; X.beginPath();
+    for (const [dx, dy, k] of [[-1, .2, .9], [1, .2, .9], [-.4, -.5, 1], [.5, -.4, .8]]) { const x = f.x + dx * r, y = cy + dy * r; X.moveTo(x + r * k, y); X.arc(x, y, r * k, 0, 7); }
+    X.fill(); X.stroke(); X.restore();
+  };
+}
+// a barra antiga do motor (canto de cima à direita) não desenha o Ômega na Coroa: a barra dele é cfBarraOmega (decisão R7)
+{ const bar0 = bar; bar = function (x, w, f) { if (md === 'coroa' && f === E) return; return bar0.apply(this, arguments); }; }
+// na cena 'fim' o marcador do jogador sai: a seta dele cobriria a coroa erguida
+{ const marc0 = cfMarcador; cfMarcador = function () { if (CF.om && CF.om.fase === 'fim') return; return marc0.apply(this, arguments); }; }
+// texto da barra: à esquerda dela, alinhado à direita
+function cfRotulo(s, x, y, cor) {
+  const X = ctx;
+  X.save(); X.font = '20px Bangers,Impact,sans-serif'; X.textAlign = 'right'; X.lineJoin = 'round';
+  X.lineWidth = 5; X.strokeStyle = '#10252b'; X.strokeText(s, x, y); X.fillStyle = cor; X.fillText(s, x, y);
+  X.restore();
+}
+// barra do Ômega (com ele em campo; some no final): vida, marca dos 50% (a troca de fase) e, depois da 'pega', a coroa ao lado
+function cfBarraOmega() {
+  if (!cfOmegaEm() || CF.om.fase === 'fim') return;
+  const B = CF_OMB, p = Math.max(0, Math.min(1, E.hp / E.max));
+  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(B.x - 2, B.y - 2, B.w + 4, B.h + 4);
+  ctx.fillStyle = '#e0002a'; ctx.fillRect(B.x, B.y, B.w * p, B.h);
+  ctx.fillStyle = '#fff'; ctx.fillRect(B.x + B.w / 2 - 1, B.y - 3, 2, B.h + 6);
+  cfRotulo('ÔMEGA', B.x - 8, B.y + B.h, '#ff5a5a');
+  if (CF.om.coroa === 'omega') cfDesCoroa(B.x + B.w + 18, B.y + B.h + 1, .55);
+}
+// barra do roubo (só no roubo): dourada, enche com CF.om.barra; embaixo, a dica
+function cfBarraRoubo() {
+  if (!cfOmegaEm() || CF.om.fase !== 'roubo') return;
+  const B = CF_RBB, p = Math.max(0, Math.min(1, CF.om.barra / CF_OMEGA.barra[CF_DIF(dif)]));
+  ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(B.x - 2, B.y - 2, B.w + 4, B.h + 4);
+  ctx.fillStyle = '#ffd23f'; ctx.fillRect(B.x, B.y, B.w * p, B.h);
+  cfRotulo('A COROA', B.x - 8, B.y + B.h, '#ffd23f');
+  const X = ctx, s = 'Corra até o Ômega e aperte ESPECIAL!';
+  X.save(); X.font = '26px Bangers,Impact,sans-serif'; X.textAlign = 'center'; X.lineJoin = 'round';
+  X.lineWidth = 6; X.strokeStyle = '#10252b'; X.strokeText(s, VW / 2, B.y + 40); X.fillStyle = '#fff'; X.fillText(s, VW / 2, B.y + 40);
+  X.restore();
+}
+// seta amarela na borda da tela, do lado do Ômega, quando ele está fora da tela no roubo
+function cfSetaOmega() {
+  if (!cfOmegaEm() || CF.om.fase !== 'roubo' || cfVe(E.x, 0)) return;
+  const d = E.x < cfCam.x ? -1 : 1, x = (d < 0 ? 14 : VW - 14) + Math.sin(tf * .25) * 4 * d, y = 230, X = ctx;
+  X.save(); X.lineJoin = 'round'; X.lineWidth = 4; X.strokeStyle = '#10252b'; X.fillStyle = '#ffd23f';
+  X.beginPath(); X.moveTo(x, y); X.lineTo(x - d * 30, y - 22); X.lineTo(x - d * 30, y + 22); X.closePath();
+  X.stroke(); X.fill(); X.restore();
+}
+{ const hud0 = cfHud; cfHud = function () { const r = hud0.apply(this, arguments); if (md === 'coroa' && P) { cfBarraOmega(); cfBarraRoubo(); cfSetaOmega(); } return r; }; }
+// câmera nas cenas 'pega', 'salta' e 'fim': enquadra o Ômega; no voo ('pega', 'salta') recua até CF_ZOOM_CENA para o arco caber na tela.
+// Fora delas, a de sempre (segue o jogador)
+{
+  const alvo0 = cfCamAlvo;
+  cfCamAlvo = function () {
+    const a = alvo0.apply(this, arguments), f = md === 'coroa' && CF.om && !E.gone ? CF.om.fase : null;
+    if (f !== 'pega' && f !== 'salta' && f !== 'fim') return a;
+    const z = f === 'fim' ? a.z : Math.min(a.z, CF_ZOOM_CENA);
+    return { x: Math.max(0, Math.min(W - VW / z, E.x - VW / z / 2)), z };
+  };
+}
+</script>
+<script id="cf-leve">
+// ================= COROA MAIS LEVE NO IPAD =================
+// O ajuste de nitidez antigo (vg-cenario) olha só o tempo do código de desenho. No iPad, o que pesa é pintar a tela em alta
+// resolução, e isso não aparece nesse tempo: a nitidez nunca baixava. Aqui o jogo mede os quadros por segundo DE VERDADE
+// (intervalo entre um desenho e o seguinte) e, se a média de 120 quadros passar de 21 ms (menos de ~48 por segundo),
+// baixa a nitidez um degrau (2 → 1,75 → 1,5 → 1,25 → 1). Nunca volta a subir, para a tela não ficar piscando de qualidade.
+// SÓ DESENHO: lê o relógio e muda o tamanho do canvas; a simulação não sabe que isto existe.
+const CF_LEVE = { lento: 21, janela: 120, degrau: .25 };
+const cfLeve = { ult: 0, soma: 0, n: 0 };
+function cfLeveQuadro(agora) {
+  const L = cfLeve, dt = agora - L.ult;
+  L.ult = agora;
+  if (!(dt > 0 && dt <= 250)) return; // primeiro quadro, aba escondida, menu ou pausa longa: não conta
+  L.soma += dt; L.n++;
+  if (L.n < CF_LEVE.janela) return;
+  const media = L.soma / L.n;
+  L.soma = 0; L.n = 0;
+  if (media > CF_LEVE.lento && NITIDEZ > 1) { nitMax = Math.max(1, NITIDEZ - CF_LEVE.degrau); ajustaNitidez(); }
+}
+{
+  const draw0 = draw;
+  draw = function () { cfLeveQuadro(performance.now()); return draw0.apply(this, arguments); }; // relógio próprio: não gasta o do medidor ?medir
+}
+</script>
+<script id="cf-voltar">
+// Botão "Escolher outro jogo": volta para a tela de escolha do site (pasta de cima). Fica no menu inicial (mesmo do Vigilantes).
+(function () {
+  const m = $('#modes'); // $ é o atalho do próprio jogo
+  if (!m || typeof m.insertBefore != 'function') return;
+  const a = document.createElement('a');
+  a.className = 'voltar'; a.href = '../'; a.textContent = '◀ Escolher outro jogo';
+  m.insertBefore(a, m.firstChild);
+})();
+</script>
+<script id="cf-cenas">
+// ================= CENAS DE CINEMA (etapa 5) — docs/superpowers/specs/2026-11-22-coroa-cenas-design.md =================
+// Abertura: base atacada → poucos contra muitos → reforços (cada um com o seu poder) → grito do Wulkan → batalha.
+// Final: "E quem disse que é você?" → a Coroa é forte demais → o Lata Velha põe a Coroa e derruba o Ômega com a palma da mão →
+// o Ômega e o exército viram brilhinhos puxados para a Coroa → a Coroa racha → festa e FIM.
+// SIMULAÇÃO: CF.cn = { id, q, ... } anda um quadro por tick pelo gancho de cfCena() (que já congela a batalha); só usa R() para
+// sortear quem está na frente da base, e devolve a semente ao terminar (a batalha depois da abertura é a mesma de sempre).
+// DESENHO E SOM: só leem CF.cn e os lutadores.
+const CF_CN = { frente: 480, ajuda: 900, entra0: 960, katz: 1880, grito: 1980, fimA: 2280, fimF: 960 };
+const CF_REFORCO = ['Henrique', 'Laila', 'Tonão', 'Luiza', 'Zumbi', 'Gabi', 'Arqueiro', 'Davi', 'Cláudio', 'Lata Velha', 'Michel', 'Rodrigo'];
+const CF_ENTRADA = { // como cada um chega: cai do céu, anda da esquerda, voa baixo da esquerda, ou surge no lugar
+  Henrique: 'surge', Laila: 'anda', 'Tonão': 'cai', Luiza: 'desce', Zumbi: 'anda', Gabi: 'surge', Arqueiro: 'cai', Davi: 'surge',
+  'Cláudio': 'cai', 'Lata Velha': 'voa', Michel: 'cai', Rodrigo: 'cai', Wulkan: 'cai', Katz: 'surge',
+};
+const CF_FALAS_FRENTE = ['São muitos!', 'Segura!', 'Não deixa passar!', 'Cadê a ajuda?', 'Protejam a Coroa!', 'Aguenta firme!'];
+let cfCenasVistas = false;
+try { cfCenasVistas = localStorage.getItem('cf-cenas-vistas') === '1'; } catch (e) {}
+const cfHerois = () => [P, ...AL];
+const cfPorNome = n => cfHerois().find(f => f && f.h.n === n);
+const cfLerp = (a, b, u) => a + (b - a) * Math.max(0, Math.min(1, u));
+
+// ---- começo das cenas ----
+function cfAbreAbertura(soGrito) {
+  const hs = cfHerois(), cn = { id: 'abertura', q: soGrito ? CF_CN.grito : 0, sd0: sd, pos: hs.map(f => [f.x, f.face]), frente: [], ordem: [], deco: [], fala: 0 };
+  if (!soGrito) {
+    const outros = hs.filter(f => f.h.n !== 'Wulkan' && f.h.n !== 'Katz').map(f => f.h.n);
+    for (let k = 0; k < 5 && outros.length; k++) cn.frente.push(outros.splice(R() * outros.length | 0, 1)[0]);
+    cn.frente.push('Wulkan', 'Katz');
+    cn.ordem = CF_REFORCO.filter(n => outros.includes(n));
+    for (const f of hs) f.gone = 1;                       // ninguém em campo enquanto a base é atacada
+    for (let k = 0; k < 9; k++) { const d = mk(cfTipo('omeguinha', dif), 1150 + k * 70); d.t = 1; d.face = -1; d.y = -120 - (k % 3) * 40; cn.deco.push(d); }
+  }
+  CF.cn = cn; mt = 0; msg = ''; CF.pular = 0;
+}
+function cfAbreFinal() { // no lugar da cena 'fim' provisória: o Ômega e os inimigos ficam parados até a palma
+  const om = CF.om;
+  om.fase = 'fim'; om.cena = CF_OMEGA.fimQ; om.coroa = 'p';
+  cfOmegaPara();
+  let lv = cfPorNome('Lata Velha');
+  if (lv && lv.caido) cfLevanta(lv);
+  if (lv && (lv.gone || lv.hp <= 0)) lv = null;
+  CF.cn = { id: 'final', q: 0, lv: lv ? cfHerois().indexOf(lv) : -1, lx: lv ? lv.x : 0 };
+  CF.pular = 0;
+  mt = 0; msg = ''; // a cena começa na hora (um aviso pendente não segura a linha do tempo)
+  X({ type: 'txt', x: P.x, y: Math.max(CF_OMEGA_FALA[1], P.y - 150 * P.z), s: 'E quem disse que é você?', c: '#ffd23f', t: 150, m: 150, sz: 30 });
+}
+
+// ---- linha do tempo (simulação) ----
+function cfCinemaTick() {
+  const cn = CF.cn;
+  if (CF.pular) { CF.pular = 0; cfMarcaVistas(); if (cn.id === 'abertura') return cfFimAbertura(); cn.q = CF_CN.fimF; return cfFimFinal(); }
+  if (cn.id === 'abertura') cfAberturaPasso(cn); else cfFinalPasso(cn);
+}
+function cfAberturaPasso(cn) {
+  const q = cn.q, hs = cfHerois();
+  if (q === 120) X({ type: 'txt', x: 420, y: 70, s: 'Com a Coroa do Fim, eu apago o universo!', c: '#ff5252', t: 150, m: 150, sz: 26 });
+  if (q >= 240 && q < 360 && q % 30 === 0) { // a nave atira na base
+    const x = 40 + (q / 30 % 4) * 30;
+    X({ type: 'ring', x, y: G - 40, c: '#ff9100', R: 120, t: 20, m: 20, gr: 1 }); X({ type: 'flash', c: '#ff9100', t: 6, m: 6 }); shake = Math.max(shake, 10);
+  }
+  for (const d of cn.deco) { // Omeguinhas de enfeite: descem da nave e avançam devagar
+    if (q >= 380 && q <= 480) d.y = cfLerp(d.y, G, (q - 380) / 100);
+    if (q > 480 && q < CF_CN.ajuda) d.x -= .35;
+    if (q >= CF_CN.grito) d.gone = 1;
+  }
+  if (q === CF_CN.frente) for (const f of hs) if (cn.frente.includes(f.h.n)) { f.gone = 0; f.x = cn.pos[hs.indexOf(f)][0]; f.y = G; f.face = 1; }
+  if (q > CF_CN.frente && q < CF_CN.ajuda && (q - CF_CN.frente) % 70 === 20) { // balões da frente
+    const f = cfPorNome(cn.frente[cn.fala % cn.frente.length]);
+    if (f && f.h.n !== 'Katz') X({ type: 'txt', x: f.x, y: f.y - 150 * f.z, s: CF_FALAS_FRENTE[cn.fala % CF_FALAS_FRENTE.length], c: '#fff', t: 60, m: 60, sz: 22 });
+    cn.fala++;
+  }
+  if (q === CF_CN.ajuda) { const f = cfPorNome(cn.frente[0]); X({ type: 'txt', x: f.x, y: f.y - 160 * f.z, s: 'Olha! Chegou ajuda!', c: '#ffd23f', t: 70, m: 70, sz: 30 }); }
+  // reforços: um de cada vez, no ponto onde a batalha vai começar
+  const n = cn.ordem.length, passo = n ? (CF_CN.katz - CF_CN.entra0) / n : 0;
+  for (let k = 0; k < n; k++) {
+    const t0 = CF_CN.entra0 + Math.round(k * passo), u = (q - t0) / 50, f = cfPorNome(cn.ordem[k]);
+    if (!f || q < t0 || q > t0 + 50) continue;
+    const [x1, fc] = cn.pos[hs.indexOf(f)], tipo = CF_ENTRADA[f.h.n] || 'cai';
+    f.gone = 0; f.face = fc;
+    f.x = tipo === 'anda' || tipo === 'voa' ? cfLerp(x1 - 420, x1, u) : x1;
+    f.y = tipo === 'cai' ? cfLerp(-160, G, u * u) : tipo === 'desce' ? cfLerp(-220, G, u) : tipo === 'voa' ? G - 30 * (1 - u) : G;
+    if (q === t0 + 50) { f.y = G; if (tipo === 'cai') X({ type: 'ring', x: f.x, y: G, c: '#fff', R: 70, t: 14, m: 14, gr: 1 }); }
+    if (f.h.n === 'Henrique' && q === t0) { X({ type: 'flash', c: '#fff', t: 8, m: 8 }); shake = Math.max(shake, 12); }
+  }
+  if (q === CF_CN.katz + 40) { shake = Math.max(shake, 14); const k = cfPorNome('Katz'); if (k) X({ type: 'txt', x: k.x, y: G - 260, s: 'TUM!', c: '#ffd23f', t: 50, m: 50, sz: 44 }); }
+  if (q === CF_CN.grito) {
+    for (const f of hs) { const p = cn.pos[hs.indexOf(f)]; f.gone = 0; f.x = p[0]; f.y = G; f.face = 1; }
+    const w = cfPorNome('Wulkan') || P;
+    X({ type: 'txt', x: w.x, y: w.y - 170 * w.z, s: 'Vigilantes, pra cima!', c: '#ffd23f', t: 150, m: 150, sz: 40 });
+  }
+  if (++cn.q >= CF_CN.fimA) cfFimAbertura();
+}
+function cfFimAbertura() {
+  const cn = CF.cn, hs = cfHerois();
+  hs.forEach((f, i) => { f.gone = 0; f.x = cn.pos[i][0]; f.face = cn.pos[i][1]; f.y = G; f.vx = 0; f.vy = 0; });
+  sd = cn.sd0;                                 // a batalha começa exatamente como começaria sem a abertura
+  CF.cn = null; mt = 0; msg = '';
+  cfMarcaVistas();
+}
+function cfFinalPasso(cn) {
+  const q = cn.q, lv = cn.lv >= 0 ? cfHerois()[cn.lv] : null, dono = lv || P;
+  if (q === 120) X({ type: 'txt', x: P.x, y: Math.max(CF_OMEGA_FALA[1], P.y - 150 * P.z), s: 'É forte demais!', c: '#fff', t: 90, m: 90, sz: 26 });
+  if (lv && lv !== P && q >= 240 && q <= 420) { // o Lata Velha chega pairando até o lado do herói
+    const alvo = P.x - (P.face || 1) * 70;
+    lv.x = cfLerp(cn.lx, alvo, (q - 240) / 180); lv.y = G - 34 + Math.sin(q * .15) * 4; lv.face = alvo > cn.lx ? 1 : -1;
+  }
+  if (q === 420) { CF.om.coroa = 'lata'; X({ type: 'txt', x: dono.x, y: Math.max(CF_OMEGA_FALA[1], dono.y - 160 * dono.z), s: 'Universo? Hoje não.', c: '#ffd23f', t: 110, m: 110, sz: 30 }); }
+  if (q === 540 && dono) dono.face = E.x > dono.x ? 1 : -1;
+  if (q === 640) { shake = Math.max(shake, 16); X({ type: 'txt', x: E.x, y: Math.max(CF_OMEGA_FALA[1], E.y - 170 * E.z), s: 'PLAFT!', c: '#ffd23f', t: 50, m: 50, sz: 56 }); }
+  if (q === 840) { for (const m of MN) { m.hp = 0; m.dead = 1; m.gone = 1; } E.gone = 1; CF.om.coroa = 'quebrada'; }
+  if (++cn.q >= CF_CN.fimF) cfFimFinal();
+}
+function cfFimFinal() {
+  const cn = CF.cn, lv = cn.lv >= 0 ? cfHerois()[cn.lv] : null;
+  if (lv) lv.y = G;
+  for (const m of MN) { m.hp = 0; m.dead = 1; m.gone = 1; }
+  CF.cn = null;
+  cfOmegaVence(); // mantém CF.retoma = null: "Tentar de novo" depois da vitória é partida nova
+  CF.festa = 1;
+  cfMarcaVistas();
+}
+function cfMarcaVistas() { cfCenasVistas = true; try { localStorage.setItem('cf-cenas-vistas', '1'); } catch (e) {} }
+
+// ---- ganchos na simulação ----
+{ const cena0 = cfCena; cfCena = function () { if (md === 'coroa' && CF.cn) { cfCinemaTick(); return true; } return cena0.apply(this, arguments); }; }
+{ const arr0 = cfArranca; cfArranca = function () { if (CF.cinema) return cfAbreFinal(); return arr0.apply(this, arguments); }; } // partida de verdade: o final de cinema no lugar da cena 'fim' provisória
+{ // partida pelo menu: abertura inteira; "Tentar de novo" do começo: só o grito. Testes que chamam cfStart direto: sem cenas
+  const start0 = cfStart;
+  cfStart = function (i, d, opt) {
+    const r = start0.apply(this, arguments);
+    CF.cinema = !!(opt && opt.cinema); CF.festa = 0; CF.cn = null;
+    if (opt && opt.cenas) cfAbreAbertura(opt.cenas === 'grito');
+    return r;
+  };
+  round = function () {
+    if (md !== 'coroa') return cfRound0.apply(this, arguments);
+    const cenas = CF.retoma ? null : CF.abrir ? 'abertura' : 'grito';
+    CF.abrir = 0;
+    return cfStart(pi, dif, { omega: true, trecho: CF.retoma, cenas, cinema: true });
+  };
+  const abre0 = cfAbrirBatalha;
+  cfAbrirBatalha = function () { CF.abrir = 1; return abre0.apply(this, arguments); };
+  $('#cfbatalha').onclick = cfAbrirBatalha;
+}
+
+// ---- botão "Pular cena" (entrada do jogador, como uma tecla) ----
+const cfPularBtn = (() => {
+  const pz = $('#pz'); if (!pz || !pz.parentNode || typeof document.createElement !== 'function') return null;
+  const b = document.createElement('button');
+  b.className = 'btn'; b.id = 'cfpular'; b.hidden = true; b.textContent = 'Pular cena ▶';
+  b.style.cssText = 'min-height:38px;font-size:19px;margin:0 0 10px';
+  b.onclick = () => { if (CF.cn) CF.pular = 1; };
+  pz.parentNode.insertBefore(b, pz.nextSibling);
+  return b;
+})();
+
+// os filhotes de onça chegam junto com o Zumbi (são desenhados por cfFilhoteDraw, fora do body)
+{ const fil0 = cfFilhoteDraw; cfFilhoteDraw = function () { const cn = md === 'coroa' ? CF.cn : null; if (cn && cn.id === 'abertura') { const z = cfPorNome('Zumbi'); if (!z || z.gone) return; } return fil0.apply(this, arguments); }; }
+// na base atacada a nave fica bem em cima da base, para aparecer atirando (só desenho: os tiros de verdade estão calados na cena)
+{ const naveX0 = cfNaveX; cfNaveX = function () { const cn = md === 'coroa' ? CF.cn : null; if (cn && cn.id === 'abertura' && cn.q < CF_CN.frente) return 420; return naveX0.apply(this, arguments); }; }
+// ---- câmera ----
+{
+  const alvo0 = cfCamAlvo;
+  cfCamAlvo = function () {
+    const cn = md === 'coroa' && P ? CF.cn : null;
+    if (!cn) return alvo0.apply(this, arguments);
+    let x = P.x, z = 1;
+    const q = cn.q;
+    if (cn.id === 'abertura') {
+      if (q < CF_CN.frente) { x = 420; z = .8; }
+      else if (q < CF_CN.entra0) { x = 600; z = .9; }
+      else if (q < CF_CN.katz) {
+        const n = cn.ordem.length, k = Math.min(n - 1, Math.floor((q - CF_CN.entra0) / ((CF_CN.katz - CF_CN.entra0) / n))), f = cfPorNome(cn.ordem[k]);
+        x = f ? cn.pos[cfHerois().indexOf(f)][0] : 600; z = .9;
+      } else if (q < CF_CN.grito) { const k = cfPorNome('Katz'); x = k ? k.x : 600; z = .75; }
+      else { const w = cfPorNome('Wulkan') || P; x = w.x; z = 1.15; }
+    } else {
+      const lv = cn.lv >= 0 ? cfHerois()[cn.lv] : P;
+      x = q < 540 ? (lv.x + P.x) / 2 : (lv.x + E.x) / 2; z = q < 540 ? 1.1 : .8;
+    }
+    return { x: Math.max(0, Math.min(W - VW / z, x - VW / z / 2)), z };
+  };
+}
+
+// ---- desenho ----
+// a base dos heróis (à esquerda do pedestal): inteira, em ruínas depois dos tiros, inteira de novo na festa
+function cfDesBase(ruina) {
+  const X = ctx, x0 = 0, w = 128, h = 200, y0 = G - h;
+  X.save(); X.lineJoin = 'round';
+  if (!ruina) {
+    X.fillStyle = '#5c6bc0'; X.strokeStyle = '#10252b'; X.lineWidth = 4;
+    X.fillRect(x0, y0 + 40, w, h - 40); X.strokeRect(x0, y0 + 40, w, h - 40);
+    X.fillRect(x0 + 34, y0, 60, 44); X.strokeRect(x0 + 34, y0, 60, 44);              // torre
+    X.fillStyle = '#ffd23f'; for (const [a, b] of [[18, 80], [74, 80], [18, 130], [74, 130]]) { X.fillRect(x0 + a, y0 + b, 26, 24); X.strokeRect(x0 + a, y0 + b, 26, 24); }
+    X.fillStyle = '#3949ab'; X.fillRect(x0 + 46, G - 46, 36, 46); X.strokeRect(x0 + 46, G - 46, 36, 46);
+    X.fillStyle = '#ff5252'; X.beginPath(); X.moveTo(x0 + 64, y0); X.lineTo(x0 + 64, y0 - 34); X.lineTo(x0 + 92, y0 - 26); X.lineTo(x0 + 64, y0 - 18); X.fill(); X.stroke();
+  } else {
+    X.fillStyle = '#5a5f73'; X.strokeStyle = '#10252b'; X.lineWidth = 4; X.beginPath();
+    X.moveTo(x0, G); X.lineTo(x0, y0 + 90); X.lineTo(x0 + 26, y0 + 70); X.lineTo(x0 + 44, y0 + 112); X.lineTo(x0 + 70, y0 + 84); X.lineTo(x0 + 96, y0 + 130); X.lineTo(x0 + w, y0 + 110); X.lineTo(x0 + w, G); X.closePath(); X.fill(); X.stroke();
+    for (let i = 0; i < 4; i++) { const t = (tf * .6 + cfAnim * .6 + i * 30) % 90; X.globalAlpha = .45 * (1 - t / 90); X.fillStyle = '#777'; X.beginPath(); X.arc(x0 + 24 + i * 26, y0 + 70 - t * 1.4, 10 + t * .3, 0, 7); X.fill(); }
+  }
+  X.restore();
+}
+let cfAnim = 0; // contador só de desenho (as cenas congelam tf)
+const cfBaseRuina = () => {
+  const cn = CF.cn;
+  if (st === 'end' && WN === P) return false;                          // festa: base reconstruída
+  if (cn && cn.id === 'abertura' && cn.q < 300) return false;
+  return true;
+};
+function cfDesEntradas(cn) { // efeitos de cada reforço chegando (só desenho, pelo quadro da cena)
+  const X = ctx, q = cn.q, n = cn.ordem.length, passo = n ? (CF_CN.katz - CF_CN.entra0) / n : 0;
+  for (let k = 0; k < n; k++) {
+    const t0 = CF_CN.entra0 + Math.round(k * passo), d = q - t0, f = cfPorNome(cn.ordem[k]);
+    if (!f || d < 0 || d > 70) continue;
+    const nm = f.h.n, x = f.x, u = d / 70;
+    X.save();
+    if (nm === 'Henrique' && d < 20) { X.strokeStyle = '#fff59d'; X.lineWidth = 10; X.lineCap = 'round'; X.beginPath(); X.moveTo(x + 30, -80); X.lineTo(x - 20, G - 220); X.lineTo(x + 25, G - 140); X.lineTo(x, G); X.stroke(); X.lineWidth = 3; X.strokeStyle = '#3e2723'; X.beginPath(); for (let i = -2; i <= 2; i++) { X.moveTo(x, G); X.lineTo(x + i * 40, G + 6); } X.stroke(); }
+    if (nm === 'Laila') for (let i = 0; i < 10; i++) { const fx = x - 400 + i * 42; if (fx < x) cfFlorIpe(X, fx, G - 6, 9, i % 2 ? '#ffd23f' : '#ffb300'); }
+    if (nm === 'Tonão' && d < 50) for (let i = 0; i < 3; i++) { const r = 10 + d * 1.2; X.globalAlpha = 1 - d / 50; X.strokeStyle = '#ff9100'; X.lineWidth = 5; X.beginPath(); X.arc(x - 60 + i * 60, 120 + i * 20, r, 0, 7); X.stroke(); }
+    if (nm === 'Luiza' && d < 60) { X.globalAlpha = .4; X.fillStyle = '#ff1744'; X.beginPath(); X.arc(x, f.y - 60, 70, 0, 7); X.fill(); }
+    if (nm === 'Zumbi') for (let i = 0; i < 5; i++) { const cx = x - 60 - i * 34 - (1 - u) * 300, cy = G - 10; X.fillStyle = '#ffca28'; X.strokeStyle = '#10252b'; X.lineWidth = 2; X.beginPath(); X.ellipse(cx, cy - 8, 14, 9, 0, 0, 7); X.fill(); X.stroke(); X.beginPath(); X.arc(cx + 12, cy - 16, 7, 0, 7); X.fill(); X.stroke(); }
+    if (nm === 'Gabi' && d < 30) { X.globalAlpha = 1 - d / 30; X.fillStyle = '#d1c4e9'; for (const [a, b, r] of [[-20, -40, 30], [18, -50, 34], [0, -86, 30], [-10, -20, 24]]) { X.beginPath(); X.arc(x + a, G + b, r + d, 0, 7); X.fill(); } }
+    if (nm === 'Arqueiro' && d < 50) { X.strokeStyle = '#5d4037'; X.lineWidth = 3; for (let i = 0; i < 7; i++) { const ax = 1000 + i * 60, ay = -40 + d * 9 - i * 20; X.beginPath(); X.moveTo(ax, ay); X.lineTo(ax - 14, ay + 26); X.stroke(); } }
+    if (nm === 'Davi' && d < 60) { const hx = 1150 - d * 3; X.strokeStyle = '#eceff1'; X.lineWidth = 2; X.beginPath(); X.moveTo(x + 30, G - 100); X.quadraticCurveTo((x + hx) / 2, G - 180, hx, G - 50); X.stroke(); }
+    if (nm === 'Cláudio' && d < 40) { X.globalAlpha = 1 - d / 40; X.strokeStyle = '#ffd23f'; X.lineWidth = 4; for (let i = 1; i <= 3; i++) { X.beginPath(); X.arc(x + 20, G - 70, i * 18 + d, 0, 7); X.stroke(); } if (d < 25) textoMundo(X, 'TSSS!', x, G - 170, 34); }
+    if (nm === 'Lata Velha') for (let i = 0; i < 4; i++) { X.globalAlpha = .5 * (1 - i / 4); X.fillStyle = '#9e9e9e'; X.beginPath(); X.arc(x - 30 - i * 26, f.y - 120 - i * 6, 12 + i * 4, 0, 7); X.fill(); }
+    X.restore();
+  }
+}
+function textoMundo(X, s, x, y, tam) {
+  X.save(); X.font = tam + 'px Bangers,Impact,sans-serif'; X.textAlign = 'center'; X.lineJoin = 'round';
+  X.lineWidth = Math.max(5, tam / 7); X.strokeStyle = '#10252b'; X.strokeText(s, x, y); X.fillStyle = '#ffd23f'; X.fillText(s, x, y); X.restore();
+}
+function cfDesFinal(cn) {
+  const X = ctx, q = cn.q, lv = cn.lv >= 0 ? cfHerois()[cn.lv] : null, dono = lv || P;
+  const cab = dono ? [dono.x, dono.y - 128 * dono.z] : [0, 0];
+  if (q >= 120 && q < 420) { // faíscas da Coroa na mão do herói
+    for (let i = 0; i < 6; i++) { const a = cfAnim * .7 + i; X.fillStyle = i % 2 ? '#fff59d' : '#ffd23f'; X.fillRect(P.x + Math.cos(a) * 30, P.y - 200 * P.z + Math.sin(a * 1.3) * 20, 4, 4); }
+  }
+  if (q >= 420 && q < 840) { // a Coroa na cabeça de balde e o olho dourado
+    const s = 1.1, y = cab[1] - 6;
+    cfCoroaBrilho(cab[0], y, s, cfAnim); cfDesCoroa(cab[0], y, s);
+    X.save(); X.globalAlpha = .55 + .3 * Math.sin(cfAnim * .3); X.fillStyle = '#ffd23f'; X.beginPath(); X.arc(cab[0] + 6 * (dono.face || 1), cab[1] + 18, 12, 0, 7); X.fill(); X.restore();
+  }
+  if (q >= 600 && q < 670) { // a mão gigante de luz dourada
+    const u = (q - 600) / 60, hx = cfLerp(dono.x, E.x, u), hy = G - 110, s = 2.2;
+    X.save(); X.globalAlpha = .75 * (1 - Math.max(0, u - .85) / .15); X.fillStyle = '#ffe066'; X.strokeStyle = '#ffb300'; X.lineWidth = 4;
+    X.translate(hx, hy); X.scale(s * (E.x > dono.x ? 1 : -1), s);
+    X.beginPath(); X.ellipse(0, 0, 26, 32, 0, 0, 7); X.fill(); X.stroke();
+    for (let i = 0; i < 4; i++) { X.beginPath(); X.ellipse(30, -24 + i * 16, 18, 7, 0, 0, 7); X.fill(); X.stroke(); }
+    X.beginPath(); X.ellipse(4, -38, 8, 16, -.6, 0, 7); X.fill(); X.stroke();
+    X.restore();
+  }
+  if (q >= 660 && q < 860) { // brilhinhos dourados puxados para a Coroa
+    const u = (q - 660) / 180;
+    for (const f of [E, ...MN]) {
+      if (!f || f.gone) continue;
+      for (let i = 0; i < 5; i++) {
+        const v = Math.min(1, u * 1.4 + i * .08), x = cfLerp(f.x + (i - 2) * 10, cab[0], v), y = cfLerp(f.y - 60, cab[1], v) - Math.sin(v * Math.PI) * 60;
+        X.fillStyle = i % 2 ? '#fff59d' : '#ffd23f'; X.fillRect(x - 2, y - 2, 5, 5);
+      }
+    }
+  }
+  if (q >= 840 && q < CF_CN.fimF) { // a Coroa racha e cai; o Lata Velha amassado faz joinha
+    const u = (q - 840) / 60, y = cfLerp(cab[1] - 6, G - 6, u * u), s = 1.1;
+    X.save(); X.translate(cab[0] + 30 * u, y); X.rotate(u * 1.2); cfDesCoroa(0, 0, s);
+    X.strokeStyle = '#10252b'; X.lineWidth = 3; X.beginPath(); X.moveTo(-4, -30); X.lineTo(4, -18); X.lineTo(-3, -8); X.lineTo(5, 2); X.stroke(); X.restore();
+    for (let i = 0; i < 3; i++) { const t = (cfAnim * 1.2 + i * 20) % 60; X.globalAlpha = .45 * (1 - t / 60); X.fillStyle = '#888'; X.beginPath(); X.arc(dono.x - 10 + i * 10, dono.y - 150 * dono.z - t * 1.2, 8 + t * .2, 0, 7); X.fill(); X.globalAlpha = 1; }
+    if (q > 880) { // joinha
+      const jx = dono.x + 44 * (dono.face || 1), jy = dono.y - 120 * dono.z;
+      X.fillStyle = '#ffd23f'; X.strokeStyle = '#10252b'; X.lineWidth = 3; X.beginPath(); X.ellipse(jx, jy, 12, 10, 0, 0, 7); X.fill(); X.stroke();
+      X.beginPath(); X.ellipse(jx - 2, jy - 16, 5, 10, 0, 0, 7); X.fill(); X.stroke();
+    }
+  }
+}
+// o Ômega cai com a palma e some; os inimigos se apagam virando brilho; Katz minúsculo e gigante na abertura
+{
+  const body1 = body;
+  body = function (f, gh) {
+    const cn = md === 'coroa' ? CF.cn : null;
+    if (!cn) return body1.apply(this, arguments);
+    if (f.gone && cn.id === 'abertura') return; // quem ainda não chegou não aparece (o motor desenha os aliados mesmo fora de campo)
+    if (cn.id === 'abertura' && CFA.includes(f)) { const z = cfPorNome('Zumbi'); if (!z || z.gone) return; } // os filhotes chegam com o Zumbi
+    const X = ctx;
+    if (cn.id === 'final' && (f === E || f.t === 1)) {
+      const q = cn.q, some = 1 - Math.max(0, Math.min(1, (q - 660) / 140));
+      if (some <= 0) return;
+      X.save(); X.globalAlpha *= some;
+      if (f === E && q >= 640) { const u = Math.min(1, (q - 640) / 16); X.translate(f.x, f.y); X.rotate(-u * Math.PI / 2 * (f.face || 1)); X.translate(-f.x, -f.y); }
+      body1.apply(this, arguments); X.restore(); return;
+    }
+    if (cn.id === 'abertura' && f.h.n === 'Katz') {
+      const q = cn.q, s = q < CF_CN.katz ? .35 : q < CF_CN.katz + 40 ? cfLerp(.35, 2.2, (q - CF_CN.katz) / 40) : q < CF_CN.grito ? cfLerp(2.2, 1, (q - CF_CN.katz - 40) / 60) : 1;
+      X.save(); X.translate(f.x, f.y); X.scale(s, s); X.translate(-f.x, -f.y); body1.apply(this, arguments); X.restore(); return;
+    }
+    return body1.apply(this, arguments);
+  };
+}
+// a nave some no final; a base e os efeitos entram no mundo
+{
+  const nave0 = cfDesNave;
+  cfDesNave = function () {
+    const cn = md === 'coroa' ? CF.cn : null;
+    if (cn && cn.id === 'final' && cn.q >= 660) { if (cn.q >= 840) return; ctx.save(); ctx.globalAlpha *= 1 - (cn.q - 660) / 180; nave0.apply(this, arguments); ctx.restore(); return; }
+    if (st === 'end' && WN === P && md === 'coroa' && CF.omega) return; // venceu: a nave foi embora
+    return nave0.apply(this, arguments);
+  };
+  const mundo1 = cfMundo;
+  cfMundo = function (on) {
+    const vale = md === 'coroa' && P && CF.omega && CF.om;
+    if (!on && vale) {
+      const cn = CF.cn;
+      cfAnim++;
+      if (cn && cn.id === 'abertura') { for (const d of cn.deco) if (!d.gone) body(d); cfDesEntradas(cn); }
+      if (cn && cn.id === 'final') cfDesFinal(cn);
+    }
+    const r = mundo1.apply(this, arguments);
+    if (on && vale && cfVe(64, 140)) cfDesBase(cfBaseRuina());
+    return r;
+  };
+}
+// a coroa "lata" e "quebrada" não são desenhadas pela etapa do Ômega (cfDesFinal cuida); o botão Pular aparece nas cenas
+{
+  const draw2 = draw;
+  draw = function () {
+    const r = draw2.apply(this, arguments);
+    if (cfPularBtn) { const cn = md === 'coroa' ? CF.cn : null; const mostra = !!cn && (cfCenasVistas || cn.q > 180 || cn.id === 'final'); if (cfPularBtn.hidden === mostra) cfPularBtn.hidden = !mostra; }
+    if (md === 'coroa' && st === 'end' && CF.festa && P) { // festa: FIM e o tempo da partida
+      const s = Math.round(tf / 60), t = 'Tempo da partida: ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+      ctx.save(); ctx.setTransform(NITIDEZ, 0, 0, NITIDEZ, 0, 0); textoMundo(ctx, 'FIM', VW / 2, 92, 56); textoMundo(ctx, t, VW / 2, 300, 26); ctx.restore();
+    }
+    return r;
+  };
+}
+// nas cenas o HUD (barras, mapinha, marcador) sai: é cinema
+{ const bar1 = bar; bar = function () { if (md === 'coroa' && CF.cn) return; return bar1.apply(this, arguments); }; }
+{ const hud1 = cfHud; cfHud = function () { if (md === 'coroa' && CF.cn) return; return hud1.apply(this, arguments); }; }
+{ const marc1 = cfMarcador; cfMarcador = function () { if (md === 'coroa' && CF.cn) return; return marc1.apply(this, arguments); }; }
+// sons das cenas (só leem o quadro da cena)
+{
+  let ouv = { id: null, q: -1 };
+  const so0 = somObserva;
+  somObserva = function () {
+    so0();
+    const cn = md === 'coroa' ? CF.cn : null;
+    if (cn) {
+      const a = ouv.id === cn.id ? ouv.q : -1, cruza = n => a < n && cn.q >= n;
+      if (cn.id === 'abertura') {
+        if (cruza(120)) toca('acabe');
+        for (let t = 240; t < 360; t += 30) if (cruza(t)) toca('ko');
+        if (cruza(CF_CN.ajuda)) toca('combo', 1, 5);
+        const n = cn.ordem.length, passo = n ? (CF_CN.katz - CF_CN.entra0) / n : 0;
+        for (let k = 0; k < n; k++) { const t0 = CF_CN.entra0 + Math.round(k * passo); const f = cfPorNome(cn.ordem[k]); if (f && cruza(t0)) toca('esp_' + (JEITO[f.h.sp] || 'golpe')); }
+        if (cruza(CF_CN.katz + 40)) toca('ko');
+        if (cruza(CF_CN.grito)) toca('vitoria');
+      } else {
+        if (cruza(420)) toca('final');
+        if (cruza(640)) toca('hit_forte');
+        if (cruza(660)) toca('esp_magia');
+        if (cruza(840)) toca('estilhaco');
+        if (cruza(900)) toca('pingo');
+      }
+      ouv = { id: cn.id, q: cn.q };
+    } else ouv = { id: null, q: -1 };
   };
 }
 </script>
