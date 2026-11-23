@@ -93,6 +93,12 @@ html,body{touch-action:manipulation;-webkit-text-size-adjust:100%}
 #game,#game *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #cv,.pad,.pad *{touch-action:none}
 </style>
+<style id="vg-voltar-css">
+/* Botão para voltar à tela de escolha do site (Vigilantes ou A Coroa do Fim) */
+.voltar{display:inline-block;margin:0 0 14px;font-family:Bangers,Impact,sans-serif;letter-spacing:.04em;font-size:20px;padding:6px 14px 4px;background:#ffd23f;color:#000;border:3px solid #000;box-shadow:4px 4px 0 #000;text-decoration:none;transform:rotate(-1.5deg)}
+.voltar:active{transform:scale(.96);box-shadow:1px 1px 0 #000}
+.voltar:focus-visible{outline:3px dashed #000;outline-offset:4px}
+</style>
 </head>
 <body>
 <main>
@@ -2501,6 +2507,16 @@ if (mqRetrato.addEventListener) mqRetrato.addEventListener('change', aoGirar); e
     } catch (e) {}
   };
 }
+</script>
+<script id="vg-voltar">
+// Botão "Escolher outro jogo": volta para a tela de escolha do site (pasta de cima). Fica no menu inicial.
+(function () {
+  const m = $('#modes'); // $ é o atalho do próprio jogo
+  if (!m || typeof m.insertBefore != 'function') return;
+  const a = document.createElement('a');
+  a.className = 'voltar'; a.href = '../'; a.textContent = '◀ Escolher outro jogo';
+  m.insertBefore(a, m.firstChild);
+})();
 </script>
 <script id="vg-zoom">
 // ================= TRAVA DE ZOOM (iPad/iPhone) =================
