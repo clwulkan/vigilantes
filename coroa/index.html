@@ -5181,26 +5181,48 @@ function cfSetaOmega() {
 </script>
 <script id="cf-leve">
 // ================= COROA MAIS LEVE NO IPAD =================
-// O ajuste de nitidez antigo (vg-cenario) olha só o tempo do código de desenho. No iPad, o que pesa é pintar a tela em alta
-// resolução, e isso não aparece nesse tempo: a nitidez nunca baixava. Aqui o jogo mede os quadros por segundo DE VERDADE
-// (intervalo entre um desenho e o seguinte) e, se a média de 120 quadros passar de 21 ms (menos de ~48 por segundo),
-// baixa a nitidez um degrau (2 → 1,75 → 1,5 → 1,25 → 1). Nunca volta a subir, para a tela não ficar piscando de qualidade.
-// SÓ DESENHO: lê o relógio e muda o tamanho do canvas; a simulação não sabe que isto existe.
-const CF_LEVE = { lento: 21, janela: 120, degrau: .25 };
-const cfLeve = { ult: 0, soma: 0, n: 0 };
+// No meio da batalha o que pesa é DESENHAR: cada herói gasta ~230 comandos de desenho por quadro (braços, pernas, contornos e
+// roupa), e com 30 lutadores na tela o iPad 7 não dá conta de 60 quadros por segundo. O ajuste antigo de nitidez (vg-cenario)
+// olhava só o tempo do código; aqui o jogo mede os quadros por segundo DE VERDADE (intervalo entre um desenho e o seguinte) e,
+// a cada 120 quadros com média acima de 21 ms (menos de ~48 por segundo), sobe um degrau do modo leve. Nunca volta atrás.
+//   degraus 1 a 4: nitidez 2 → 1,75 → 1,5 → 1,25 → 1 (menos pontos para pintar);
+//   degrau 5: a imagem passa a ser refeita a cada 2 quadros (30 por segundo) — o jogo em si continua a 60;
+//   degrau 6: além disso, os lutadores longe do jogador perdem os detalhes pequenos da roupa (estampa, ombreiras, capa, saia,
+//             emblema) quando a câmera está afastada e eles aparecem pequenos. O herói do jogador fica sempre completo.
+// SÓ DESENHO: lê o relógio, muda o tamanho do canvas e pula desenhos; a simulação não sabe que isto existe.
+const CF_LEVE = { lento: 21, janela: 120, degrau: .25, zoomDetalhe: .8 };
+const cfLeve = { ult: 0, soma: 0, n: 0, meio: false, simples: false, pula: false, atual: null };
 function cfLeveQuadro(agora) {
   const L = cfLeve, dt = agora - L.ult;
   L.ult = agora;
   if (!(dt > 0 && dt <= 250)) return; // primeiro quadro, aba escondida, menu ou pausa longa: não conta
+  // no modo de 30 por segundo o intervalo medido é o de cada chamada (metade dos desenhos de verdade): mede igual
   L.soma += dt; L.n++;
   if (L.n < CF_LEVE.janela) return;
   const media = L.soma / L.n;
   L.soma = 0; L.n = 0;
-  if (media > CF_LEVE.lento && NITIDEZ > 1) { nitMax = Math.max(1, NITIDEZ - CF_LEVE.degrau); ajustaNitidez(); }
+  if (media <= CF_LEVE.lento) return;
+  if (NITIDEZ > 1) { nitMax = Math.max(1, NITIDEZ - CF_LEVE.degrau); ajustaNitidez(); }
+  else if (!L.meio) L.meio = true;
+  else L.simples = true;
 }
 {
   const draw0 = draw;
-  draw = function () { cfLeveQuadro(performance.now()); return draw0.apply(this, arguments); }; // relógio próprio: não gasta o do medidor ?medir
+  draw = function () {
+    cfLeveQuadro(performance.now()); // relógio próprio: não gasta o do medidor ?medir
+    const L = cfLeve;
+    if (L.meio && md === 'coroa' && st === 'fight') { L.pula = !L.pula; if (L.pula) return; } // 30 por segundo na batalha
+    return draw0.apply(this, arguments);
+  };
+  // quem está sendo desenhado agora (para os detalhes saberem se é o jogador e se está longe)
+  const body0 = body;
+  body = function (f) { const a = cfLeve.atual; cfLeve.atual = f; try { return body0.apply(this, arguments); } finally { cfLeve.atual = a; } };
+  const semDetalhe = () => cfLeve.simples && md === 'coroa' && cfCam.z < CF_LEVE.zoomDetalhe && cfLeve.atual && cfLeve.atual !== P;
+  for (const nome of ['padrao', 'ombros', 'roupaAtras', 'roupaSaia', 'emblema']) {
+    const f0 = globalThis[nome];
+    if (typeof f0 !== 'function') continue;
+    globalThis[nome] = function () { if (semDetalhe()) return; return f0.apply(this, arguments); };
+  }
 }
 </script>
 <script id="cf-voltar">
